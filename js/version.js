@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '1.2.6',
+  VERSION: '1.2.7',
   BUILD_DATE: '2024-08-30',
-  LAST_UPDATE: '16:15',
+  LAST_UPDATE: '16:30',
   
   // Changelog resumido
   CHANGES: {
+    '1.2.7': 'Correções: Pontuação detalhada no bracket e botão remover tentos',
     '1.2.6': 'Melhorias: Sincronização em tempo real e interface do bracket',
     '1.2.5': 'Implementação: API REST para sincronização real entre dispositivos',
     '1.2.4': 'Correção: Remover indicador Local do header',

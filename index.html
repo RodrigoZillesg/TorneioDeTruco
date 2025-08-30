@@ -424,7 +424,7 @@
                           <div v-if="partida.duplaA" class="font-medium text-sm">
                             {{ obterNomeDupla(partida.duplaA) }}
                             <span v-if="partida.maos && partida.maos.length > 0 && partida.status === 'pendente'" class="ml-2 text-brand-600 font-bold">
-                              {{ contarVitoriasMaos(partida, partida.duplaA) }}
+                              {{ obterPontuacaoDetalhada(partida, partida.duplaA)?.textoCompleto }}
                             </span>
                           </div>
                           <div v-else class="text-slate-400 text-sm italic">
@@ -445,7 +445,7 @@
                           <div v-if="partida.duplaB" class="font-medium text-sm">
                             {{ obterNomeDupla(partida.duplaB) }}
                             <span v-if="partida.maos && partida.maos.length > 0 && partida.status === 'pendente'" class="ml-2 text-brand-600 font-bold">
-                              {{ contarVitoriasMaos(partida, partida.duplaB) }}
+                              {{ obterPontuacaoDetalhada(partida, partida.duplaB)?.textoCompleto }}
                             </span>
                           </div>
                           <div v-else-if="partida.duplaA && !partida.duplaB && partida.status === 'concluida'" class="text-slate-400 text-sm italic">
@@ -519,11 +519,18 @@
               <div class="text-lg text-slate-600">{{ contarTentosMaoAtual(partidaAtual?.duplaA) }}/12 tentos</div>
             </div>
             <div class="space-y-2">
-              <button @click="adicionarPontoMao(partidaAtual?.duplaA, 1)" 
-                      :disabled="partidaAtual?.status === 'concluida'"
-                      class="w-full bg-brand-500 text-white py-2 px-4 rounded-md hover:bg-brand-600 disabled:bg-slate-300 disabled:cursor-not-allowed">
-                +1 Tento
-              </button>
+              <div class="flex gap-2">
+                <button @click="adicionarPontoMao(partidaAtual?.duplaA, 1)" 
+                        :disabled="partidaAtual?.status === 'concluida'"
+                        class="flex-1 bg-brand-500 text-white py-2 px-4 rounded-md hover:bg-brand-600 disabled:bg-slate-300 disabled:cursor-not-allowed">
+                  +1 Tento
+                </button>
+                <button @click="removerPontoMao(partidaAtual?.duplaA, 1)" 
+                        :disabled="partidaAtual?.status === 'concluida' || contarTentosMaoAtual(partidaAtual?.duplaA) === 0"
+                        class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 disabled:bg-slate-300 disabled:cursor-not-allowed">
+                  -1
+                </button>
+              </div>
             </div>
           </div>
 
@@ -536,11 +543,18 @@
               <div class="text-lg text-slate-600">{{ contarTentosMaoAtual(partidaAtual?.duplaB) }}/12 tentos</div>
             </div>
             <div class="space-y-2">
-              <button @click="adicionarPontoMao(partidaAtual?.duplaB, 1)" 
-                      :disabled="partidaAtual?.status === 'concluida'"
-                      class="w-full bg-brand-500 text-white py-2 px-4 rounded-md hover:bg-brand-600 disabled:bg-slate-300 disabled:cursor-not-allowed">
-                +1 Tento
-              </button>
+              <div class="flex gap-2">
+                <button @click="adicionarPontoMao(partidaAtual?.duplaB, 1)" 
+                        :disabled="partidaAtual?.status === 'concluida'"
+                        class="flex-1 bg-brand-500 text-white py-2 px-4 rounded-md hover:bg-brand-600 disabled:bg-slate-300 disabled:cursor-not-allowed">
+                  +1 Tento
+                </button>
+                <button @click="removerPontoMao(partidaAtual?.duplaB, 1)" 
+                        :disabled="partidaAtual?.status === 'concluida' || contarTentosMaoAtual(partidaAtual?.duplaB) === 0"
+                        class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 disabled:bg-slate-300 disabled:cursor-not-allowed">
+                  -1
+                </button>
+              </div>
             </div>
           </div>
         </div>

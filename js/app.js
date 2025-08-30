@@ -779,6 +779,29 @@ createApp({
       return vitorias;
     }
 
+    // Obter pontuação detalhada para exibição
+    function obterPontuacaoDetalhada(partida, duplaId) {
+      if (!partida || !partida.maos) return null;
+      
+      const vitorias = contarVitoriasMaos(partida, duplaId);
+      let tentosAtuais = 0;
+      
+      // Procurar mão em andamento
+      for (let i = partida.maos.length - 1; i >= 0; i--) {
+        const mao = partida.maos[i];
+        if (mao.pontosA < 12 && mao.pontosB < 12) {
+          tentosAtuais = duplaId === partida.duplaA ? mao.pontosA : mao.pontosB;
+          break;
+        }
+      }
+      
+      return {
+        vitorias,
+        tentosAtuais,
+        textoCompleto: tentosAtuais > 0 ? `${vitorias} (${tentosAtuais})` : `${vitorias}`
+      };
+    }
+
     // Contar tentos da dupla na mão atual (em andamento)
     function contarTentosMaoAtual(duplaId) {
       if (!partidaAtual.value?.maos) return 0;
@@ -797,6 +820,36 @@ createApp({
       }
       
       return 0; // Se não há mão em andamento, retorna 0
+    }
+
+    // Remover pontos de uma mão
+    function removerPontoMao(duplaId, pontos) {
+      if (!partidaAtual.value || partidaAtual.value.status === 'concluida') return;
+      
+      // Encontrar mão em andamento
+      let maoAtual = null;
+      for (let i = partidaAtual.value.maos.length - 1; i >= 0; i--) {
+        const mao = partidaAtual.value.maos[i];
+        if (mao.pontosA < 12 && mao.pontosB < 12) {
+          maoAtual = mao;
+          break;
+        }
+      }
+      
+      if (!maoAtual) return;
+      
+      // Remover pontos da dupla correta
+      if (duplaId === partidaAtual.value.duplaA) {
+        maoAtual.pontosA = Math.max(0, maoAtual.pontosA - pontos);
+      } else if (duplaId === partidaAtual.value.duplaB) {
+        maoAtual.pontosB = Math.max(0, maoAtual.pontosB - pontos);
+      }
+      
+      // Marcar ação local
+      partidaAtual.value.ultimaAcaoLocal = Date.now();
+      
+      // Salvar progresso
+      salvarProgresso();
     }
 
     // Adicionar pontos a uma mão
@@ -854,8 +907,20 @@ createApp({
       if (vitoriasA >= maosNecessarias || vitoriasB >= maosNecessarias) {
         finalizarPartida(vitoriasA > vitoriasB ? partidaAtual.value.duplaA : partidaAtual.value.duplaB);
       } else {
-        // Salvar progresso
-        salvarProgresso();
+        // Atualizar bracket imediatamente com a pontuação atual
+        if (bracket.value) {
+          for (const rodada of bracket.value.rodadas) {
+            const partida = rodada.matches.find(m => m.id === partidaAtual.value.id);
+            if (partida) {
+              partida.maos = [...partidaAtual.value.maos];
+              break;
+            }
+          }
+        }
+        
+        // Salvar progresso e forçar sincronização completa
+        await salvarProgresso();
+        await salvarTorneioAtual();
       }
     }
 
@@ -1546,7 +1611,9 @@ createApp({
       partidaAtual,
       contarVitoriasMaos,
       contarTentosMaoAtual,
+      obterPontuacaoDetalhada,
       adicionarPontoMao,
+      removerPontoMao,
       desfazerUltimaMao,
       editarResultado,
       voltarParaBracket,

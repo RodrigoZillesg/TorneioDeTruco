@@ -378,11 +378,14 @@
                   <div class="text-sm text-green-600 font-medium">{{ partida.nomeRodada }} • Mesa {{ partida.mesa }}</div>
                   <div class="font-semibold">
                     {{ obterNomeDupla(partida.duplaA) }} vs {{ obterNomeDupla(partida.duplaB) }}
+                    <span v-if="partida.maos && partida.maos.length > 0" class="ml-2 text-brand-600">
+                      ({{ contarVitoriasMaos(partida, partida.duplaA) }} x {{ contarVitoriasMaos(partida, partida.duplaB) }})
+                    </span>
                   </div>
                 </div>
                 <button @click="iniciarPartida(partida)" 
                         class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors">
-                  Jogar
+                  {{ partida.maos && partida.maos.length > 0 ? 'Acompanhar' : 'Jogar' }}
                 </button>
               </div>
             </div>
@@ -420,6 +423,9 @@
                         <div class="flex-1">
                           <div v-if="partida.duplaA" class="font-medium text-sm">
                             {{ obterNomeDupla(partida.duplaA) }}
+                            <span v-if="partida.maos && partida.maos.length > 0 && partida.status === 'pendente'" class="ml-2 text-brand-600 font-bold">
+                              {{ contarVitoriasMaos(partida, partida.duplaA) }}
+                            </span>
                           </div>
                           <div v-else class="text-slate-400 text-sm italic">
                             Aguardando...
@@ -438,6 +444,9 @@
                         <div class="flex-1">
                           <div v-if="partida.duplaB" class="font-medium text-sm">
                             {{ obterNomeDupla(partida.duplaB) }}
+                            <span v-if="partida.maos && partida.maos.length > 0 && partida.status === 'pendente'" class="ml-2 text-brand-600 font-bold">
+                              {{ contarVitoriasMaos(partida, partida.duplaB) }}
+                            </span>
                           </div>
                           <div v-else-if="partida.duplaA && !partida.duplaB && partida.status === 'concluida'" class="text-slate-400 text-sm italic">
                             BYE
@@ -456,7 +465,7 @@
                     <div v-if="partida.status === 'pendente'" class="p-2 bg-slate-50 border-t text-center">
                       <button @click="iniciarPartida(partida)" 
                               class="text-xs bg-brand-500 text-white px-3 py-1 rounded hover:bg-brand-600">
-                        Jogar
+                        {{ partida.maos && partida.maos.length > 0 ? 'Acompanhar' : 'Jogar' }}
                       </button>
                     </div>
                     <div v-else-if="partida.status === 'concluida'" class="p-2 bg-green-50 border-t text-center">

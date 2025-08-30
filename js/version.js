@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '1.2.5',
+  VERSION: '1.2.6',
   BUILD_DATE: '2024-08-30',
-  LAST_UPDATE: '16:00',
+  LAST_UPDATE: '16:15',
   
   // Changelog resumido
   CHANGES: {
+    '1.2.6': 'Melhorias: Sincronização em tempo real e interface do bracket',
     '1.2.5': 'Implementação: API REST para sincronização real entre dispositivos',
     '1.2.4': 'Correção: Remover indicador Local do header',
     '1.2.3': 'Correções: Exclusão de torneio, bracket e interface mobile',

@@ -341,26 +341,60 @@ createApp({
               bracket.value = torneioAtualizado.bracket;
             }
             
-            mostrarToast('Dados sincronizados', 'sucesso');
+            // Removido toast para não atrapalhar usuários
           }
         });
         
         // Configurar sincronização com servidor
         window.PersistenceManager.iniciarSyncServidor((torneioAtualizado) => {
-          if (torneioAtualizado && (!torneioAtual.value || torneioAtualizado.id !== torneioAtual.value.id)) {
-            console.log('🌐 Novo torneio detectado no servidor');
-            torneioAtual.value = torneioAtualizado;
-            torneioCompartilhado.value = torneioAtualizado;
-            
-            if (torneioAtualizado.duplas) {
-              duplas.value = torneioAtualizado.duplas;
+          if (torneioAtualizado) {
+            // Sempre atualizar se é o mesmo torneio (para sincronizar pontuações)
+            if (torneioAtual.value && torneioAtualizado.id === torneioAtual.value.id) {
+              console.log('🔄 Atualizando torneio do servidor');
+              
+              // Salvar posição atual da partida se estiver em uma
+              const partidaEmAndamento = partidaAtual.value?.id;
+              
+              torneioAtual.value = torneioAtualizado;
+              
+              if (torneioAtualizado.duplas) {
+                duplas.value = torneioAtualizado.duplas;
+              }
+              if (torneioAtualizado.bracket) {
+                bracket.value = torneioAtualizado.bracket;
+                
+                // Se tem partida em andamento, atualizar ela também
+                if (partidaEmAndamento && torneioAtualizado.bracket) {
+                  for (const rodada of torneioAtualizado.bracket.rodadas) {
+                    const partida = rodada.matches.find(m => m.id === partidaEmAndamento);
+                    if (partida) {
+                      partidaAtual.value = partida;
+                      break;
+                    }
+                  }
+                }
+                
+                // Recarregar estatísticas do bracket
+                if (window.bracketFunctions) {
+                  bracketStats.value = window.bracketFunctions.obterEstatisticasBracket(bracket.value);
+                  proximasPartidas.value = window.bracketFunctions.obterProximasPartidas(bracket.value);
+                }
+              }
             }
-            if (torneioAtualizado.bracket) {
-              bracket.value = torneioAtualizado.bracket;
-              carregarBracket();
+            // Novo torneio detectado
+            else if (!torneioAtual.value || torneioAtualizado.id !== torneioAtual.value.id) {
+              console.log('🌐 Novo torneio detectado no servidor');
+              torneioAtual.value = torneioAtualizado;
+              torneioCompartilhado.value = torneioAtualizado;
+              
+              if (torneioAtualizado.duplas) {
+                duplas.value = torneioAtualizado.duplas;
+              }
+              if (torneioAtualizado.bracket) {
+                bracket.value = torneioAtualizado.bracket;
+                carregarBracket();
+              }
             }
-            
-            mostrarToast('Torneio sincronizado do servidor!', 'sucesso');
           }
         });
       }

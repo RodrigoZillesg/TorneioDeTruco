@@ -31,7 +31,6 @@ createApp({
       nome: '',
       jogadores: ['', '']
     });
-    const textoImportacao = ref('');
     let sortableInstance = null;
 
     // Estados para autocomplete de jogadores
@@ -213,6 +212,20 @@ createApp({
       
       try {
         await db.torneios.delete(torneioId);
+        
+        // Se for o torneio atual, limpar da persistência também
+        if (torneioAtual.value?.id === torneioId) {
+          torneioAtual.value = null;
+          torneioCompartilhado.value = null;
+          duplas.value = [];
+          bracket.value = null;
+          
+          // Limpar do PersistenceManager
+          if (window.PersistenceManager) {
+            window.PersistenceManager.limpar();
+          }
+        }
+        
         await carregarTorneiosSalvos();
         mostrarToast('Torneio excluído com sucesso!');
       } catch (error) {
@@ -513,60 +526,6 @@ createApp({
       }
     }
 
-    function importarDuplas() {
-      if (!textoImportacao.value.trim()) {
-        mostrarToast('Cole uma lista de duplas para importar');
-        return;
-      }
-
-      try {
-        const linhas = textoImportacao.value.split('\n').filter(linha => linha.trim());
-        let adicionadas = 0;
-        let ignoradas = 0;
-
-        for (const linha of linhas) {
-          const partes = linha.split(',').map(p => p.trim());
-          const nome = partes[0];
-          
-          if (!nome) continue;
-          
-          // Verificar se já existe
-          const existe = duplas.value.find(d => d.nome.toLowerCase() === nome.toLowerCase());
-          if (existe) {
-            ignoradas++;
-            continue;
-          }
-
-          const novaDupla = criarModeloDupla({
-            nome: nome,
-            jogadores: [
-              partes[1] || '',
-              partes[2] || ''
-            ]
-          });
-          
-          duplas.value.push(novaDupla);
-          adicionadas++;
-        }
-
-        if (adicionadas > 0) {
-          salvarTorneioAtual();
-          mostrarToast(`${adicionadas} dupla${adicionadas > 1 ? 's' : ''} adicionada${adicionadas > 1 ? 's' : ''}${ignoradas > 0 ? `, ${ignoradas} ignorada${ignoradas > 1 ? 's' : ''} (duplicada${ignoradas > 1 ? 's' : ''})` : ''}`);
-          limparImportacao();
-        } else if (ignoradas > 0) {
-          mostrarToast('Todas as duplas já existem');
-        } else {
-          mostrarToast('Nenhuma dupla válida encontrada');
-        }
-      } catch (error) {
-        console.error('Erro ao importar duplas:', error);
-        mostrarToast('Erro ao processar a lista', 'erro');
-      }
-    }
-
-    function limparImportacao() {
-      textoImportacao.value = '';
-    }
 
     async function carregarDuplasBase() {
       try {
@@ -650,11 +609,14 @@ createApp({
         }
         
         // Gerar o bracket usando a função do módulo bracket.js
-        const bracket = window.bracketFunctions.gerarBracket(duplas.value);
+        const bracketGerado = window.bracketFunctions.gerarBracket(duplas.value);
         
         // Salvar no torneio atual
-        torneioAtual.value.bracket = bracket;
+        torneioAtual.value.bracket = bracketGerado;
         torneioAtual.value.status = 'em_andamento';
+        
+        // Atualizar bracket reativo imediatamente
+        bracket.value = bracketGerado;
         
         await salvarTorneioAtual();
         
@@ -1502,13 +1464,10 @@ createApp({
       mostrarFormularioDupla,
       duplaEditando,
       formularioDupla,
-      textoImportacao,
       editarDupla,
       cancelarEdicao,
       salvarDupla,
       removerDupla,
-      importarDuplas,
-      limparImportacao,
       carregarDuplasBase,
       gerarBracket,
       carregarDuplas,

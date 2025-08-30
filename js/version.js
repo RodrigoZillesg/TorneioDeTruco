@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '1.2.2',
+  VERSION: '1.2.3',
   BUILD_DATE: '2024-08-30',
-  LAST_UPDATE: '08:25',
+  LAST_UPDATE: '15:30',
   
   // Changelog resumido
   CHANGES: {
+    '1.2.3': 'Correções: Exclusão de torneio, bracket e interface mobile',
     '1.2.2': 'Correção: Sincronização de dados entre dispositivos',
     '1.2.1': 'Adicionado sistema de versionamento visível no header',
     '1.2.0': 'Sistema de persistência universal e sincronização melhorada',

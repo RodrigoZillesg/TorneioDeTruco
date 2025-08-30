@@ -321,41 +321,18 @@
           </form>
         </div>
 
-        <!-- Importação de Duplas -->
+        <!-- Carregar Duplas Padrão -->
         <div class="bg-white p-4 rounded-lg border">
-          <h3 class="text-lg font-semibold mb-4">📥 Importar Duplas</h3>
+          <h3 class="text-lg font-semibold mb-4">⚡ Duplas Padrão</h3>
           
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-2">Colar lista de duplas</label>
-              <textarea v-model="textoImportacao" 
-                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm"
-                        rows="4"
-                        placeholder="Cole uma lista de duplas (uma por linha):&#10;Dupla A&#10;Dupla B, Jogador 1, Jogador 2&#10;Dupla C&#10;..."></textarea>
-              <p class="text-xs text-slate-500 mt-1">
-                Formatos aceitos: "Nome da Dupla" ou "Nome, Jogador1, Jogador2"
-              </p>
-            </div>
-            
-            <div class="space-y-2">
-              <div class="flex gap-3">
-                <button @click="importarDuplas" 
-                        :disabled="!textoImportacao.trim()"
-                        class="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-600 transition-colors disabled:bg-slate-300">
-                  Importar Duplas
-                </button>
-                <button @click="limparImportacao" 
-                        class="px-4 py-2 text-slate-600 border rounded-lg hover:bg-slate-50 transition-colors">
-                  Limpar
-                </button>
-              </div>
-              
-              <button @click="carregarDuplasBase" 
-                      class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-600 transition-colors text-sm">
-                ⚡ Carregar Duplas Padrão (6 duplas)
-              </button>
-            </div>
-          </div>
+          <button @click="carregarDuplasBase" 
+                  class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-600 transition-colors">
+            Carregar Duplas Padrão (6 duplas)
+          </button>
+          
+          <p class="text-xs text-slate-500 mt-2 text-center">
+            Carrega 6 duplas pré-definidas para começar rapidamente
+          </p>
         </div>
 
         <!-- Botão Próximo -->

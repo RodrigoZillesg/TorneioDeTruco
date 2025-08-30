@@ -1,0 +1,1 @@
+- toda nossa comunicação e textos do projeto devem ser em português do brasil

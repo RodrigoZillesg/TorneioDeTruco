@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Torneio de Truco</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#0ea5e9',
+              50: '#f0f9ff',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div id="app" class="min-h-dvh flex flex-col">
+    <!-- Header -->
+    <header class="px-4 py-3 border-b bg-white sticky top-0 z-10 relative">
+      <div class="flex items-center">
+        <button v-if="canGoBack" @click="goBack" class="text-brand-600 mr-3">
+          ← Voltar
+        </button>
+        <h1 class="text-xl font-bold text-brand-700">{{ pageTitle || 'Torneio de Truco' }}</h1>
+      </div>
+    </header>
+
+    <!-- Conteúdo -->
+    <main class="flex-1 p-4" :class="mainClass">
+      <!-- Home View -->
+      <div v-if="currentRoute === 'home'" class="space-y-6">
+        <div class="text-center">
+          <h2 class="text-2xl font-bold mb-2">Bem-vindo ao Sistema de Torneio de Truco</h2>
+          <p class="text-slate-600 mb-6">Organize torneios de truco de forma simples e rápida</p>
+        </div>
+        
+        <div class="space-y-4">
+          <button @click="navigate('novo-torneio')" 
+                  class="w-full bg-brand-500 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-brand-600 transition-colors">
+            🏆 Novo Torneio
+          </button>
+          
+        </div>
+
+        <!-- Lista de torneios salvos -->
+        <div v-if="torneiosSalvos.length > 0" class="mt-8">
+          <h3 class="text-lg font-semibold mb-4">Torneios Salvos</h3>
+          <div class="space-y-3">
+            <div v-for="torneio in torneiosSalvos" :key="torneio.id" 
+                 class="bg-white p-4 rounded-lg border flex justify-between items-center">
+              <div>
+                <h4 class="font-medium">{{ torneio.nome }}</h4>
+                <p class="text-sm text-slate-600">{{ formatarData(torneio.criadoEm) }}</p>
+                <span class="inline-block mt-1 px-2 py-1 text-xs rounded-full" 
+                      :class="torneio.status === 'concluido' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'">
+                  {{ torneio.status === 'concluido' ? 'Finalizado' : 'Em andamento' }}
+                </span>
+              </div>
+              <div class="flex gap-2">
+                <button @click="abrirTorneio(torneio.id)" 
+                        class="bg-brand-500 text-white px-4 py-2 rounded-md hover:bg-brand-600">
+                  Abrir
+                </button>
+                <button @click="reiniciarTorneio(torneio.id)" 
+                        class="bg-yellow-500 text-white px-3 py-2 rounded-md hover:bg-yellow-600 text-sm"
+                        title="Reiniciar torneio">
+                  🔄
+                </button>
+                <button @click="excluirTorneio(torneio.id)" 
+                        class="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600 text-sm"
+                        title="Excluir torneio">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configuração Novo Torneio -->
+      <div v-else-if="currentRoute === 'novo-torneio'" class="space-y-6">
+        <h2 class="text-xl font-bold">Configuração do Torneio</h2>
+        
+        <form @submit.prevent="criarTorneio" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-2">Nome do Torneio</label>
+            <input v-model="novoTorneio.nome" 
+                   type="text" 
+                   required
+                   class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                   placeholder="Ex: Truco da Firma 2025">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Formato</label>
+            <select v-model="novoTorneio.regras.formato" 
+                    class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500">
+              <option value="eliminatoria_simples">Eliminatória Simples</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Melhor de quantas mãos?</label>
+            <select v-model="novoTorneio.regras.melhorDe" 
+                    class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500">
+              <option :value="1">Melhor de 1</option>
+              <option :value="3">Melhor de 3</option>
+              <option :value="5">Melhor de 5</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Pontos por mão</label>
+            <select v-model="novoTorneio.regras.pontosPorMao" 
+                    class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500">
+              <option :value="1">1 ponto</option>
+              <option :value="3">3 pontos</option>
+            </select>
+          </div>
+
+
+          <button type="submit" 
+                  class="w-full bg-brand-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-brand-600 transition-colors">
+            Próximo: Cadastrar Duplas
+          </button>
+        </form>
+      </div>
+
+      <!-- Tela de Cadastro de Duplas -->
+      <div v-else-if="currentRoute === 'duplas'" class="space-y-6">
+        <div class="flex justify-end items-center">
+          <span class="text-sm text-slate-600">{{ duplas.length }} dupla{{ duplas.length !== 1 ? 's' : '' }}</span>
+        </div>
+
+        <!-- Lista de Duplas Cadastradas -->
+        <div v-if="duplas.length > 0" class="space-y-3">
+          <h3 class="text-lg font-semibold flex items-center gap-2">
+            📋 Duplas Cadastradas
+            <button @click="mostrarFormularioDupla = !mostrarFormularioDupla" 
+                    class="text-sm bg-brand-100 text-brand-700 px-3 py-1 rounded-full hover:bg-brand-200">
+              {{ mostrarFormularioDupla ? 'Ocultar' : 'Adicionar' }}
+            </button>
+          </h3>
+          
+          <!-- Lista Ordenável -->
+          <div ref="sortableList" class="space-y-2">
+            <div v-for="(dupla, index) in duplas" 
+                 :key="dupla.id" 
+                 :data-id="dupla.id"
+                 class="bg-white p-4 rounded-lg border hover:shadow-md transition-shadow cursor-move">
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center gap-3">
+                    <span class="text-2xl">⚡</span>
+                    <div>
+                      <h4 class="font-semibold text-lg">{{ dupla.nome }}</h4>
+                      <div v-if="dupla.jogadores[0] || dupla.jogadores[1]" class="text-sm text-slate-600">
+                        <span v-if="dupla.jogadores[0]">{{ dupla.jogadores[0] }}</span>
+                        <span v-if="dupla.jogadores[0] && dupla.jogadores[1]"> • </span>
+                        <span v-if="dupla.jogadores[1]">{{ dupla.jogadores[1] }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">#{{ index + 1 }}</span>
+                  <button @click="editarDupla(dupla)" 
+                          class="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
+                    ✏️
+                  </button>
+                  <button @click="removerDupla(dupla.id)" 
+                          class="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="text-xs text-slate-500 flex items-center gap-2">
+            <span>🔄</span>
+            <span>Arraste e solte para reordenar as duplas</span>
+          </div>
+        </div>
+
+        <!-- Formulário de Nova Dupla -->
+        <div v-show="mostrarFormularioDupla || duplas.length === 0" class="bg-white p-4 rounded-lg border">
+          <h3 class="text-lg font-semibold mb-4">
+            {{ duplaEditando ? '✏️ Editar Dupla' : '➕ Nova Dupla' }}
+          </h3>
+          
+          <form @submit.prevent="salvarDupla" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Nome da Dupla (opcional)</label>
+              <input v-model="formularioDupla.nome" 
+                     type="text" 
+                     class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                     placeholder="Ex: Os Campeões">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="relative">
+                <label class="block text-sm font-medium mb-2">Jogador 1 (opcional)</label>
+                <input v-model="formularioDupla.jogadores[0]" 
+                       @input="buscarSugestoesJogador($event.target.value, 1)"
+                       @focus="buscarSugestoesJogador($event.target.value, 1)"
+                       @blur="esconderSugestoesJ1"
+                       type="text" 
+                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                       placeholder="Ex: João"
+                       autocomplete="off">
+                
+                <!-- Sugestões Jogador 1 -->
+                <div v-if="mostrarSugestoesJ1 && sugestoesJogador1.length > 0" 
+                     class="absolute z-10 w-full bg-white border border-slate-200 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto">
+                  <div v-for="jogador in sugestoesJogador1.slice(0, 8)" 
+                       :key="jogador.nome"
+                       @click="selecionarJogador(jogador.nome, 1)"
+                       class="px-3 py-2 hover:bg-slate-100 cursor-pointer text-sm border-b border-slate-100 last:border-b-0">
+                    {{ jogador.nome }}
+                  </div>
+                </div>
+              </div>
+              
+              <div class="relative">
+                <label class="block text-sm font-medium mb-2">Jogador 2 (opcional)</label>
+                <input v-model="formularioDupla.jogadores[1]" 
+                       @input="buscarSugestoesJogador($event.target.value, 2)"
+                       @focus="buscarSugestoesJogador($event.target.value, 2)"
+                       @blur="esconderSugestoesJ2"
+                       type="text" 
+                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                       placeholder="Ex: Maria"
+                       autocomplete="off">
+                
+                <!-- Sugestões Jogador 2 -->
+                <div v-if="mostrarSugestoesJ2 && sugestoesJogador2.length > 0" 
+                     class="absolute z-10 w-full bg-white border border-slate-200 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto">
+                  <div v-for="jogador in sugestoesJogador2.slice(0, 8)" 
+                       :key="jogador.nome"
+                       @click="selecionarJogador(jogador.nome, 2)"
+                       class="px-3 py-2 hover:bg-slate-100 cursor-pointer text-sm border-b border-slate-100 last:border-b-0">
+                    {{ jogador.nome }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-3">
+              <button type="submit" 
+                      class="flex-1 bg-brand-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-brand-600 transition-colors">
+                {{ duplaEditando ? 'Salvar Alterações' : 'Adicionar Dupla' }}
+              </button>
+              <button v-if="duplaEditando" 
+                      type="button" 
+                      @click="cancelarEdicao"
+                      class="px-6 py-3 text-slate-600 border rounded-lg hover:bg-slate-50 transition-colors">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Importação de Duplas -->
+        <div class="bg-white p-4 rounded-lg border">
+          <h3 class="text-lg font-semibold mb-4">📥 Importar Duplas</h3>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Colar lista de duplas</label>
+              <textarea v-model="textoImportacao" 
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm"
+                        rows="4"
+                        placeholder="Cole uma lista de duplas (uma por linha):&#10;Dupla A&#10;Dupla B, Jogador 1, Jogador 2&#10;Dupla C&#10;..."></textarea>
+              <p class="text-xs text-slate-500 mt-1">
+                Formatos aceitos: "Nome da Dupla" ou "Nome, Jogador1, Jogador2"
+              </p>
+            </div>
+            
+            <div class="space-y-2">
+              <div class="flex gap-3">
+                <button @click="importarDuplas" 
+                        :disabled="!textoImportacao.trim()"
+                        class="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-600 transition-colors disabled:bg-slate-300">
+                  Importar Duplas
+                </button>
+                <button @click="limparImportacao" 
+                        class="px-4 py-2 text-slate-600 border rounded-lg hover:bg-slate-50 transition-colors">
+                  Limpar
+                </button>
+              </div>
+              
+              <button @click="carregarDuplasBase" 
+                      class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-600 transition-colors text-sm">
+                ⚡ Carregar Duplas Padrão (6 duplas)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botão Próximo -->
+        <div v-if="duplas.length >= 2" class="pt-4 border-t">
+          <button @click="gerarBracket" 
+                  class="w-full bg-brand-500 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-brand-600 transition-colors">
+            🏆 Próximo: Gerar Bracket ({{ duplas.length }} duplas)
+          </button>
+        </div>
+        <div v-else class="pt-4 border-t">
+          <div class="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <p class="text-yellow-700 font-medium">⚠️ Mínimo de 2 duplas necessárias</p>
+            <p class="text-yellow-600 text-sm mt-1">
+              Cadastre {{ 2 - duplas.length }} dupla{{ (2 - duplas.length) > 1 ? 's' : '' }} para continuar
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tela do Bracket -->
+      <div v-else-if="currentRoute === 'bracket'" class="space-y-6">
+        <!-- Header do Bracket -->
+        <div class="bg-white p-4 rounded-lg border">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Bracket do Torneio</h2>
+            <div v-if="bracketStats" class="text-right">
+              <div class="text-sm text-slate-600">Progresso</div>
+              <div class="text-lg font-semibold text-brand-600">{{ bracketStats.progresso }}%</div>
+            </div>
+          </div>
+          
+          <div v-if="bracketStats" class="grid grid-cols-3 gap-4 text-center text-sm">
+            <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+              <div class="text-green-700 font-semibold">{{ bracketStats.partidasConcluidas }}</div>
+              <div class="text-green-600">Concluídas</div>
+            </div>
+            <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+              <div class="text-yellow-700 font-semibold">{{ bracketStats.partidasPendentes }}</div>
+              <div class="text-yellow-600">Próximas</div>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+              <div class="text-slate-700 font-semibold">{{ bracketStats.partidasAguardando }}</div>
+              <div class="text-slate-600">Aguardando</div>
+            </div>
+          </div>
+
+          <!-- Campeão -->
+          <div v-if="torneioAtual?.campeao" class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+            <div class="text-2xl mb-2">🏆</div>
+            <div class="text-lg font-bold text-yellow-800">Campeão</div>
+            <div class="text-xl font-semibold text-yellow-700">{{ obterNomeDupla(torneioAtual.campeao) }}</div>
+          </div>
+        </div>
+
+        <!-- Próximas Partidas -->
+        <div v-if="proximasPartidas.length > 0" class="bg-white p-4 rounded-lg border">
+          <h3 class="text-lg font-semibold mb-4 text-green-600">🎯 Próximas Partidas</h3>
+          <div class="space-y-3">
+            <div v-for="partida in proximasPartidas" 
+                 :key="partida.id" 
+                 class="p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div class="flex justify-between items-center">
+                <div>
+                  <div class="text-sm text-green-600 font-medium">{{ partida.nomeRodada }} • Mesa {{ partida.mesa }}</div>
+                  <div class="font-semibold">
+                    {{ obterNomeDupla(partida.duplaA) }} vs {{ obterNomeDupla(partida.duplaB) }}
+                  </div>
+                </div>
+                <button @click="iniciarPartida(partida)" 
+                        class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors">
+                  Jogar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bracket Visual -->
+        <div v-if="bracket?.rodadas" class="bg-white p-4 rounded-lg border">
+          <h3 class="text-lg font-semibold mb-4">📊 Visualização do Bracket</h3>
+          
+          <!-- Layout Horizontal das Rodadas -->
+          <div class="overflow-x-auto">
+            <div class="flex gap-6 min-w-max p-4">
+              <div v-for="rodada in bracket.rodadas" 
+                   :key="rodada.indice" 
+                   class="flex-shrink-0 w-64">
+                <!-- Header da Rodada -->
+                <div class="text-center mb-4">
+                  <div class="bg-brand-100 text-brand-700 px-3 py-2 rounded-lg font-semibold text-sm">
+                    {{ rodada.nome }}
+                  </div>
+                </div>
+
+                <!-- Partidas da Rodada -->
+                <div class="space-y-4">
+                  <div v-for="partida in rodada.matches" 
+                       :key="partida.id" 
+                       class="border rounded-lg overflow-hidden"
+                       :class="obterClassePartida(partida)">
+                    
+                    <!-- Dupla A -->
+                    <div class="p-3 border-b" 
+                         :class="partida.vencedor === partida.duplaA ? 'bg-green-50 border-green-200' : 'bg-white'">
+                      <div class="flex justify-between items-center">
+                        <div class="flex-1">
+                          <div v-if="partida.duplaA" class="font-medium text-sm">
+                            {{ obterNomeDupla(partida.duplaA) }}
+                          </div>
+                          <div v-else class="text-slate-400 text-sm italic">
+                            Aguardando...
+                          </div>
+                        </div>
+                        <div v-if="partida.vencedor === partida.duplaA" class="text-green-600">
+                          ✓
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Dupla B -->
+                    <div class="p-3" 
+                         :class="partida.vencedor === partida.duplaB ? 'bg-green-50 border-green-200' : 'bg-white'">
+                      <div class="flex justify-between items-center">
+                        <div class="flex-1">
+                          <div v-if="partida.duplaB" class="font-medium text-sm">
+                            {{ obterNomeDupla(partida.duplaB) }}
+                          </div>
+                          <div v-else-if="partida.duplaA && !partida.duplaB && partida.status === 'concluida'" class="text-slate-400 text-sm italic">
+                            BYE
+                          </div>
+                          <div v-else class="text-slate-400 text-sm italic">
+                            Aguardando...
+                          </div>
+                        </div>
+                        <div v-if="partida.vencedor === partida.duplaB" class="text-green-600">
+                          ✓
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Footer da Partida -->
+                    <div v-if="partida.status === 'pendente'" class="p-2 bg-slate-50 border-t text-center">
+                      <button @click="iniciarPartida(partida)" 
+                              class="text-xs bg-brand-500 text-white px-3 py-1 rounded hover:bg-brand-600">
+                        Jogar
+                      </button>
+                    </div>
+                    <div v-else-if="partida.status === 'concluida'" class="p-2 bg-green-50 border-t text-center">
+                      <span class="text-xs text-green-600 font-medium">Concluída</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado Vazio -->
+        <div v-if="!bracket?.rodadas?.length" class="text-center py-12">
+          <div class="text-slate-400 mb-4">
+            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012-2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+          </div>
+          <p class="text-slate-600 text-lg font-medium">Bracket ainda não foi gerado</p>
+          <p class="text-slate-500 text-sm mt-1">Cadastre as duplas e gere o bracket para visualizar os confrontos</p>
+          <div class="mt-6">
+            <button @click="navigate('duplas')" 
+                    class="bg-brand-500 text-white px-6 py-3 rounded-lg hover:bg-brand-600 transition-colors">
+              Cadastrar Duplas
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tela de Partida/Pontuação -->
+      <div v-else-if="currentRoute === 'partida'" class="space-y-6">
+        <!-- Header da Partida -->
+        <div class="bg-white p-4 rounded-lg border">
+          <div class="text-center">
+            <div class="text-sm text-slate-600 mb-2">{{ partidaAtual?.nomeRodada || 'Partida' }} • Mesa {{ partidaAtual?.mesa }}</div>
+            <div class="text-xl font-bold">
+              {{ obterNomeDupla(partidaAtual?.duplaA) }} vs {{ obterNomeDupla(partidaAtual?.duplaB) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Placar Atual -->
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Dupla A -->
+          <div class="bg-white p-6 rounded-lg border text-center" 
+               :class="partidaAtual?.vencedor === partidaAtual?.duplaA ? 'border-green-500 bg-green-50' : ''">
+            <div class="text-lg font-semibold mb-2">{{ obterNomeDupla(partidaAtual?.duplaA) }}</div>
+            <div class="mb-4">
+              <div class="text-2xl font-bold text-brand-600">{{ contarVitoriasMaos(partidaAtual?.duplaA) }} mãos</div>
+              <div class="text-lg text-slate-600">{{ contarTentosMaoAtual(partidaAtual?.duplaA) }}/12 tentos</div>
+            </div>
+            <div class="space-y-2">
+              <button @click="adicionarPontoMao(partidaAtual?.duplaA, 1)" 
+                      :disabled="partidaAtual?.status === 'concluida'"
+                      class="w-full bg-brand-500 text-white py-2 px-4 rounded-md hover:bg-brand-600 disabled:bg-slate-300 disabled:cursor-not-allowed">
+                +1 Tento
+              </button>
+            </div>
+          </div>
+
+          <!-- Dupla B -->
+          <div class="bg-white p-6 rounded-lg border text-center" 
+               :class="partidaAtual?.vencedor === partidaAtual?.duplaB ? 'border-green-500 bg-green-50' : ''">
+            <div class="text-lg font-semibold mb-2">{{ obterNomeDupla(partidaAtual?.duplaB) }}</div>
+            <div class="mb-4">
+              <div class="text-2xl font-bold text-brand-600">{{ contarVitoriasMaos(partidaAtual?.duplaB) }} mãos</div>
+              <div class="text-lg text-slate-600">{{ contarTentosMaoAtual(partidaAtual?.duplaB) }}/12 tentos</div>
+            </div>
+            <div class="space-y-2">
+              <button @click="adicionarPontoMao(partidaAtual?.duplaB, 1)" 
+                      :disabled="partidaAtual?.status === 'concluida'"
+                      class="w-full bg-brand-500 text-white py-2 px-4 rounded-md hover:bg-brand-600 disabled:bg-slate-300 disabled:cursor-not-allowed">
+                +1 Tento
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Histórico de Mãos -->
+        <div v-if="partidaAtual?.maos?.length > 0" class="bg-white p-4 rounded-lg border">
+          <h3 class="text-lg font-semibold mb-4">📋 Histórico de Mãos</h3>
+          <div class="space-y-2">
+            <div v-for="(mao, index) in partidaAtual.maos.slice().reverse()" 
+                 :key="index" 
+                 class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+              <div class="text-sm">
+                <span class="font-medium">Mão {{ partidaAtual.maos.length - index }}:</span>
+                {{ obterNomeDupla(partidaAtual.duplaA) }} {{ mao.pontosA }} x {{ mao.pontosB }} {{ obterNomeDupla(partidaAtual.duplaB) }}
+                <span v-if="mao.pontosA >= 12 || mao.pontosB >= 12" class="ml-2 text-green-600 font-bold">
+                  (Vencida por {{ mao.pontosA >= 12 ? obterNomeDupla(partidaAtual.duplaA) : obterNomeDupla(partidaAtual.duplaB) }})
+                </span>
+                <span v-else class="ml-2 text-yellow-600">(Em andamento)</span>
+              </div>
+              <button @click="desfazerUltimaMao" 
+                      v-if="index === 0 && partidaAtual.status !== 'concluida'" 
+                      class="text-red-600 hover:bg-red-50 p-1 rounded">
+                🗑️
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="space-y-3">
+          <div v-if="partidaAtual?.status === 'concluida'" class="space-y-3">
+            <button @click="voltarParaBracket" 
+                    class="w-full bg-green-500 text-white py-4 px-6 rounded-lg text-lg font-semibold">
+              ✓ Partida Finalizada - Voltar ao Bracket
+            </button>
+            <button @click="editarResultado" 
+                    class="w-full bg-yellow-500 text-white py-3 px-4 rounded-lg hover:bg-yellow-600">
+              ✏️ Editar Resultado
+            </button>
+          </div>
+          
+          <div v-else class="grid grid-cols-2 gap-3">
+            <button @click="desfazerUltimaMao" 
+                    :disabled="!partidaAtual?.maos?.length"
+                    class="bg-red-500 text-white py-3 px-4 rounded-lg hover:bg-red-600 disabled:bg-slate-300 disabled:cursor-not-allowed">
+              ↶ Desfazer Última Mão
+            </button>
+            <button @click="voltarParaBracket" 
+                    class="bg-slate-500 text-white py-3 px-4 rounded-lg hover:bg-slate-600">
+              ← Voltar ao Bracket
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tela de Compartilhamento -->
+      <div v-else-if="currentRoute === 'compartilhar'" class="space-y-6">
+        <h2 class="text-xl font-bold">Compartilhar e Exportar</h2>
+        
+        <!-- Resumo do Torneio -->
+        <div v-if="torneioAtual" class="bg-gradient-to-r from-brand-50 to-blue-50 p-6 rounded-lg border border-brand-200">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <h3 class="text-lg font-bold text-brand-700">{{ torneioAtual.nome }}</h3>
+              <span class="px-3 py-1 text-xs font-medium rounded-full" 
+                    :class="torneioAtual.status === 'concluido' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'">
+                {{ torneioAtual.status === 'concluido' ? 'Finalizado' : 'Em andamento' }}
+              </span>
+              <span v-if="clientesConectados > 1" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">
+                🔗 {{ clientesConectados }} conectados
+              </span>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div class="bg-white/60 p-3 rounded-lg">
+              <div class="text-2xl font-bold text-brand-600">{{ duplas.length }}</div>
+              <div class="text-xs text-brand-600">Duplas</div>
+            </div>
+            <div class="bg-white/60 p-3 rounded-lg">
+              <div class="text-2xl font-bold text-green-600">{{ bracketStats?.partidasConcluidas || 0 }}</div>
+              <div class="text-xs text-green-600">Concluídas</div>
+            </div>
+            <div class="bg-white/60 p-3 rounded-lg">
+              <div class="text-2xl font-bold text-yellow-600">{{ bracketStats?.partidasPendentes || 0 }}</div>
+              <div class="text-xs text-yellow-600">Pendentes</div>
+            </div>
+            <div class="bg-white/60 p-3 rounded-lg">
+              <div class="text-2xl font-bold text-brand-600">{{ bracketStats?.progresso || 0 }}%</div>
+              <div class="text-xs text-brand-600">Progresso</div>
+            </div>
+          </div>
+
+          <!-- Campeão -->
+          <div v-if="torneioAtual.campeao" class="mt-4 p-4 bg-yellow-100 border border-yellow-200 rounded-lg text-center">
+            <div class="text-2xl mb-1">🏆</div>
+            <div class="font-bold text-yellow-800">{{ obterNomeDupla(torneioAtual.campeao) }}</div>
+            <div class="text-sm text-yellow-700">Campeão do Torneio</div>
+          </div>
+        </div>
+
+        <!-- Exportação JSON -->
+        <div class="bg-white p-6 rounded-lg border">
+          <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            📁 Exportar e Backup
+          </h3>
+          <p class="text-slate-600 mb-4">Faça backup completo do seu torneio ou compartilhe com outros organizadores</p>
+          
+          <div class="space-y-3">
+            <button @click="exportarTorneioJSON" 
+                    class="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-medium">
+              💾 Baixar Arquivo JSON Completo
+            </button>
+            
+            <button @click="criarBackupAutomatico" 
+                    class="w-full bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-colors font-medium">
+              🛡️ Criar Backup Local
+            </button>
+
+            <div v-if="backupsDisponiveis.length > 0" class="mt-4 p-4 bg-gray-50 rounded-lg">
+              <h4 class="text-sm font-medium text-gray-700 mb-2">Backups Locais Disponíveis</h4>
+              <div class="space-y-2">
+                <div v-for="backup in backupsDisponiveis.slice(0, 3)" 
+                     :key="backup.id" 
+                     class="flex justify-between items-center text-sm">
+                  <div>
+                    <span class="font-medium">{{ backup.nome }}</span>
+                    <span class="text-gray-500 ml-2">{{ formatarData(backup.criadoEm) }}</span>
+                  </div>
+                  <button @click="restaurarBackup(backup.id)" 
+                          class="text-blue-600 hover:text-blue-800 text-xs">
+                    Restaurar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Compartilhamento via Link/QR -->
+        <div class="bg-white p-6 rounded-lg border">
+          <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            🔗 Compartilhar via Link
+          </h3>
+          <p class="text-slate-600 mb-4">Gere um link público para visualização do torneio em tempo real</p>
+          
+          <div class="space-y-4">
+            <!-- Botões de Geração -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button @click="gerarLinkSomenteLeitura" 
+                      :disabled="gerandoLink"
+                      class="bg-brand-500 text-white py-3 px-4 rounded-lg hover:bg-brand-600 transition-colors font-medium disabled:bg-gray-300">
+                {{ gerandoLink ? 'Gerando...' : '👁️ Link Somente Leitura' }}
+              </button>
+              
+              <button @click="gerarQRCode" 
+                      :disabled="!linkCompartilhamento || gerandoQR"
+                      class="bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 transition-colors font-medium disabled:bg-gray-300">
+                {{ gerandoQR ? 'Gerando...' : '📱 Gerar QR Code' }}
+              </button>
+            </div>
+
+            <!-- Link Gerado -->
+            <div v-if="linkCompartilhamento" class="space-y-3">
+              <div class="p-4 bg-gray-50 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Link Gerado:</label>
+                <div class="flex gap-2">
+                  <input ref="linkInput" 
+                         :value="linkCompartilhamento.link" 
+                         readonly
+                         class="flex-1 p-2 text-sm border rounded-md bg-white">
+                  <button @click="copiarLink" 
+                          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                    {{ linkCopiado ? '✓ Copiado' : '📋 Copiar' }}
+                  </button>
+                </div>
+                
+                <div class="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                  <span>Tamanho: {{ linkCompartilhamento.tamanho }} chars</span>
+                  <span v-if="linkCompartilhamento.comprimido" class="text-blue-600">Comprimido</span>
+                  <span :class="linkCompartilhamento.valido ? 'text-green-600' : 'text-red-600'">
+                    {{ linkCompartilhamento.valido ? 'URL Válida' : 'URL muito longa' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Aviso para URLs longas -->
+              <div v-if="!linkCompartilhamento.valido" class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div class="text-yellow-800 text-sm">
+                  ⚠️ <strong>URL muito longa:</strong> Para torneios com muitos dados, recomendamos usar o arquivo JSON para compartilhar.
+                </div>
+              </div>
+            </div>
+
+            <!-- QR Code -->
+            <div v-if="mostrarQR" class="text-center">
+              <h4 class="text-sm font-medium text-gray-700 mb-3">QR Code para Acesso Rápido</h4>
+              <div class="inline-block p-4 bg-white border-2 border-gray-200 rounded-lg">
+                <div ref="qrContainer" class="flex justify-center"></div>
+              </div>
+              <p class="mt-2 text-xs text-gray-500">Escaneie para visualizar o torneio no celular</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informações Detalhadas -->
+        <div class="bg-white p-6 rounded-lg border">
+          <h3 class="text-lg font-semibold mb-4">ℹ️ Detalhes Técnicos</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Info do Torneio -->
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between">
+                <span class="text-slate-600">ID do Torneio:</span>
+                <span class="font-mono text-xs">{{ torneioAtual?.id }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-600">Criado em:</span>
+                <span class="font-medium">{{ formatarData(torneioAtual?.criadoEm) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-600">Formato:</span>
+                <span class="font-medium">{{ torneioAtual?.regras?.formato || 'N/A' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-600">Melhor de:</span>
+                <span class="font-medium">{{ torneioAtual?.regras?.melhorDe || 'N/A' }} mãos</span>
+              </div>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between">
+                <span class="text-slate-600">Total de Partidas:</span>
+                <span class="font-medium">{{ calcularTotalPartidas() }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-600">Rodadas:</span>
+                <span class="font-medium">{{ bracket?.rodadas?.length || 0 }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-600">Partidas por Rodada:</span>
+                <span class="font-medium">{{ calcularMediaPartidasPorRodada() }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-600">Tempo Estimado:</span>
+                <span class="font-medium">{{ calcularTempoEstimado() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ranking das Duplas -->
+        <div v-if="duplas.length > 0" class="bg-white p-6 rounded-lg border">
+          <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            🏅 Ranking das Duplas
+          </h3>
+          
+          <div class="space-y-3">
+            <div v-for="(dupla, index) in duplasComEstatisticas" 
+                 :key="dupla.id" 
+                 class="flex items-center justify-between p-3 rounded-lg"
+                 :class="index === 0 ? 'bg-yellow-50 border border-yellow-200' : 'bg-slate-50'">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                     :class="index === 0 ? 'bg-yellow-400 text-yellow-900' : index === 1 ? 'bg-slate-300 text-slate-700' : index === 2 ? 'bg-orange-300 text-orange-900' : 'bg-slate-200 text-slate-600'">
+                  {{ index + 1 }}
+                </div>
+                <div>
+                  <div class="font-medium flex items-center gap-2">
+                    {{ dupla.nome }}
+                    <span v-if="index === 0 && torneioAtual?.campeao === dupla.id" class="text-yellow-500">👑</span>
+                  </div>
+                  <div class="text-xs text-slate-600">
+                    <span v-if="dupla.jogadores[0] || dupla.jogadores[1]">
+                      {{ [dupla.jogadores[0], dupla.jogadores[1]].filter(j => j).join(' • ') }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="text-right text-sm">
+                <div class="font-medium text-brand-600">{{ dupla.stats.vitorias }}V {{ dupla.stats.derrotas }}D</div>
+                <div class="text-xs text-slate-500">
+                  {{ dupla.stats.pontosPro }}-{{ dupla.stats.pontosContra }} pts
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modo Visualização (se for link compartilhado) -->
+        <div v-if="modoVisualizacao" class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+          <div class="flex items-center gap-2 text-blue-700">
+            <span class="text-lg">👁️</span>
+            <span class="font-medium">Modo Visualização Ativo</span>
+          </div>
+          <p class="text-sm text-blue-600 mt-1">
+            Você está visualizando um torneio compartilhado. As funcionalidades de edição estão desabilitadas.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tela de Visualização Pública (link compartilhado) -->
+      <div v-else-if="currentRoute === 'visualizar-publico'" class="space-y-6">
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
+          <div class="text-center">
+            <div class="text-lg mb-2">👁️ Visualização Pública</div>
+            <h2 class="text-2xl font-bold text-blue-800 mb-2">{{ torneioAtual?.nome }}</h2>
+            <p class="text-blue-600 text-sm">Atualizado em tempo real • Somente visualização</p>
+          </div>
+        </div>
+
+        <!-- Status do Torneio -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-white p-4 rounded-lg border text-center">
+            <div class="text-2xl font-bold text-brand-600">{{ duplas.length }}</div>
+            <div class="text-sm text-slate-600">Duplas</div>
+          </div>
+          <div class="bg-white p-4 rounded-lg border text-center">
+            <div class="text-2xl font-bold text-green-600">{{ bracketStats?.partidasConcluidas || 0 }}</div>
+            <div class="text-sm text-slate-600">Concluídas</div>
+          </div>
+          <div class="bg-white p-4 rounded-lg border text-center">
+            <div class="text-2xl font-bold text-yellow-600">{{ bracketStats?.partidasPendentes || 0 }}</div>
+            <div class="text-sm text-slate-600">Próximas</div>
+          </div>
+          <div class="bg-white p-4 rounded-lg border text-center">
+            <div class="text-2xl font-bold text-blue-600">{{ bracketStats?.progresso || 0 }}%</div>
+            <div class="text-sm text-slate-600">Progresso</div>
+          </div>
+        </div>
+
+        <!-- Campeão (se finalizado) -->
+        <div v-if="torneioAtual?.campeao" class="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-lg border border-yellow-200">
+          <div class="text-center">
+            <div class="text-4xl mb-3">🏆</div>
+            <div class="text-2xl font-bold text-yellow-800 mb-1">{{ obterNomeDupla(torneioAtual.campeao) }}</div>
+            <div class="text-yellow-600 font-medium">Campeão do Torneio</div>
+          </div>
+        </div>
+
+        <!-- Bracket Simplificado para Visualização -->
+        <div v-if="bracket?.rodadas" class="bg-white p-6 rounded-lg border">
+          <h3 class="text-lg font-semibold mb-4 text-center">🏆 Chaveamento</h3>
+          
+          <div class="overflow-x-auto">
+            <div class="flex gap-4 min-w-max p-2">
+              <div v-for="rodada in bracket.rodadas" 
+                   :key="rodada.indice" 
+                   class="flex-shrink-0 w-56">
+                <div class="text-center mb-3">
+                  <div class="bg-slate-100 text-slate-700 px-3 py-2 rounded-lg font-medium text-sm">
+                    {{ rodada.nome || `Rodada ${rodada.indice}` }}
+                  </div>
+                </div>
+
+                <div class="space-y-3">
+                  <div v-for="partida in rodada.matches" 
+                       :key="partida.id" 
+                       class="border rounded-lg overflow-hidden bg-white shadow-sm">
+                    
+                    <div class="p-3 border-b text-center bg-slate-50">
+                      <div class="text-xs text-slate-600 font-medium">
+                        Mesa {{ partida.mesa }}
+                      </div>
+                    </div>
+                    
+                    <div class="p-3 text-sm">
+                      <div class="flex justify-between items-center mb-2" 
+                           :class="partida.vencedor === partida.duplaA ? 'font-bold text-green-700' : ''">
+                        <span>{{ obterNomeDupla(partida.duplaA) || 'Aguardando...' }}</span>
+                        <span v-if="partida.vencedor === partida.duplaA" class="text-green-600">✓</span>
+                      </div>
+                      
+                      <div class="text-xs text-center text-slate-400 my-1">vs</div>
+                      
+                      <div class="flex justify-between items-center" 
+                           :class="partida.vencedor === partida.duplaB ? 'font-bold text-green-700' : ''">
+                        <span>{{ obterNomeDupla(partida.duplaB) || 'Aguardando...' }}</span>
+                        <span v-if="partida.vencedor === partida.duplaB" class="text-green-600">✓</span>
+                      </div>
+                    </div>
+
+                    <div class="px-3 pb-2 text-center">
+                      <span v-if="partida.status === 'concluida'" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                        Finalizada
+                      </span>
+                      <span v-else-if="partida.status === 'pendente'" class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">
+                        Em andamento
+                      </span>
+                      <span v-else class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                        Aguardando
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ranking das Duplas -->
+        <div v-if="duplas.length > 0" class="bg-white p-6 rounded-lg border">
+          <h3 class="text-lg font-semibold mb-4 text-center">🏅 Classificação</h3>
+          
+          <div class="space-y-2">
+            <div v-for="(dupla, index) in duplasComEstatisticas.slice(0, 8)" 
+                 :key="dupla.id" 
+                 class="flex items-center justify-between p-3 rounded-lg"
+                 :class="index < 3 ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200' : 'bg-slate-50'">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                     :class="index === 0 ? 'bg-yellow-400 text-yellow-900' : index === 1 ? 'bg-slate-300 text-slate-700' : index === 2 ? 'bg-orange-300 text-orange-900' : 'bg-slate-200 text-slate-600'">
+                  {{ index + 1 }}
+                </div>
+                <div>
+                  <div class="font-medium flex items-center gap-2">
+                    {{ dupla.nome }}
+                    <span v-if="torneioAtual?.campeao === dupla.id" class="text-yellow-500">👑</span>
+                  </div>
+                  <div class="text-xs text-slate-600">
+                    {{ dupla.stats.vitorias }} vitória{{ dupla.stats.vitorias !== 1 ? 's' : '' }} • {{ dupla.stats.derrotas }} derrota{{ dupla.stats.derrotas !== 1 ? 's' : '' }}
+                  </div>
+                </div>
+              </div>
+              <div class="text-right text-sm">
+                <div class="font-medium">{{ dupla.stats.pontosPro }}-{{ dupla.stats.pontosContra }}</div>
+                <div class="text-xs text-slate-500">pontos</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informações do Torneio -->
+        <div class="bg-white p-6 rounded-lg border">
+          <h3 class="text-lg font-semibold mb-4 text-center">ℹ️ Sobre este Torneio</h3>
+          
+          <div class="space-y-3 text-sm max-w-md mx-auto">
+            <div class="flex justify-between">
+              <span class="text-slate-600">Formato:</span>
+              <span class="font-medium">{{ torneioAtual?.regras?.formato || 'N/A' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-600">Melhor de:</span>
+              <span class="font-medium">{{ torneioAtual?.regras?.melhorDe || 'N/A' }} mãos</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-600">Total de partidas:</span>
+              <span class="font-medium">{{ calcularTotalPartidas() }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-600">Criado em:</span>
+              <span class="font-medium">{{ formatarData(torneioAtual?.criadoEm) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer da Visualização Pública -->
+        <div class="text-center py-4 text-slate-500">
+          <p class="text-sm">
+            ⚡ Sistema de Torneio de Truco • Atualização automática
+          </p>
+          <button @click="navigate('home')" class="mt-3 text-blue-600 hover:text-blue-800 text-sm underline">
+            Criar seu próprio torneio
+          </button>
+        </div>
+      </div>
+
+      <!-- Outras telas serão implementadas -->
+      <div v-else class="text-center py-12">
+        <p class="text-slate-600">Tela em desenvolvimento...</p>
+      </div>
+    </main>
+
+    <!-- Toast para mensagens -->
+    <div v-if="toast.show" 
+         :class="['fixed z-50 px-4 py-3 rounded-lg shadow-lg max-w-sm transition-all duration-300 transform', 
+                  toast.tipo === 'erro' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white',
+                  toast.posicao]">
+      <div class="flex items-center gap-2">
+        <span v-if="toast.tipo === 'erro'">❌</span>
+        <span v-else>✅</span>
+        <span class="text-sm font-medium">{{ toast.message }}</span>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <nav v-if="showTabBar" class="bg-white border-t sticky bottom-0">
+      <ul class="grid grid-cols-4 text-center">
+        <li class="p-3" :class="currentRoute === 'home' ? 'text-brand-600 bg-brand-50' : 'text-slate-600'" 
+            @click="navigate('home')">
+          <div class="text-sm">🏠</div>
+          <div class="text-xs">Home</div>
+        </li>
+        <li class="p-3" :class="currentRoute === 'duplas' ? 'text-brand-600 bg-brand-50' : 'text-slate-600'" 
+            @click="navigate('duplas')">
+          <div class="text-sm">👥</div>
+          <div class="text-xs">Duplas</div>
+        </li>
+        <li class="p-3" 
+            :class="currentRoute === 'bracket' ? 'text-brand-600 bg-brand-50' : bracketDisponivel ? 'text-slate-600' : 'text-slate-400'" 
+            @click="bracketDisponivel ? navigate('bracket') : mostrarToast('Configure as duplas e gere o bracket primeiro')">
+          <div class="text-sm">🏆</div>
+          <div class="text-xs">Bracket</div>
+        </li>
+        <li class="p-3" :class="currentRoute === 'compartilhar' ? 'text-brand-600 bg-brand-50' : 'text-slate-600'" 
+            @click="navigate('compartilhar')">
+          <div class="text-sm">📤</div>
+          <div class="text-xs">Compartilhar</div>
+        </li>
+      </ul>
+    </nav>
+  </div>
+
+
+  <!-- Bibliotecas externas -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/dexie@latest/dist/dexie.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+
+  <!-- Socket.IO (carregado condicionalmente se servidor disponível) -->
+  <script src="/socket.io/socket.io.js"></script>
+  
+  <!-- Scripts do app -->
+  <script src="js/db.js"></script>
+  <script src="js/bracket.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/sync.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

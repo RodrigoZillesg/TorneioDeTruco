@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '1.2.7',
+  VERSION: '1.2.8',
   BUILD_DATE: '2024-08-30',
-  LAST_UPDATE: '16:30',
+  LAST_UPDATE: '16:45',
   
   // Changelog resumido
   CHANGES: {
+    '1.2.8': 'URGENTE: Correção de erros JavaScript críticos',
     '1.2.7': 'Correções: Pontuação detalhada no bracket e botão remover tentos',
     '1.2.6': 'Melhorias: Sincronização em tempo real e interface do bracket',
     '1.2.5': 'Implementação: API REST para sincronização real entre dispositivos',

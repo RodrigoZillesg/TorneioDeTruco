@@ -853,7 +853,7 @@ createApp({
     }
 
     // Adicionar pontos a uma mão
-    function adicionarPontoMao(duplaId, pontos) {
+    async function adicionarPontoMao(duplaId, pontos) {
       if (!partidaAtual.value || partidaAtual.value.status === 'concluida') return;
       
       const melhorDe = torneioAtual.value?.regras?.melhorDe || 3;

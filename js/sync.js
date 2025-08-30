@@ -63,6 +63,7 @@ window.syncFunctions = (function() {
         
         // Fallback: localStorage events
         window.addEventListener('storage', processarEventoStorage);
+      }
       
       // Iniciar heartbeat
       iniciarHeartbeat();

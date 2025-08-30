@@ -49,6 +49,11 @@ createApp({
     // Estados para sincronização
     const clientesConectados = ref(1);
     const syncStatus = ref('desconectado'); // 'conectado', 'sincronizando', 'desconectado'
+    
+    // Versão do sistema
+    const appVersion = computed(() => {
+      return window.AppVersion ? window.AppVersion.getDisplayVersion() : 'v1.0.0';
+    });
 
     const pageTitle = computed(() => {
       const titles = {
@@ -1469,6 +1474,7 @@ createApp({
       toast,
       novoTorneio,
       pageTitle,
+      appVersion,
       showTabBar,
       canGoBack,
       mainClass,

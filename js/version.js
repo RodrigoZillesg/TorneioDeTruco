@@ -4,9 +4,9 @@
  */
 
 window.AppVersion = {
-  VERSION: '1.2.8',
+  VERSION: '1.2.9',
   BUILD_DATE: '2024-08-30',
-  LAST_UPDATE: '16:45',
+  LAST_UPDATE: '17:00',
   
   // Changelog resumido
   CHANGES: {

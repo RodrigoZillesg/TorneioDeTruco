@@ -350,6 +350,16 @@ createApp({
           if (torneioAtualizado) {
             // Sempre atualizar se é o mesmo torneio (para sincronizar pontuações)
             if (torneioAtual.value && torneioAtualizado.id === torneioAtual.value.id) {
+              // Verificar se há ação local recente (últimos 5 segundos)
+              const agora = Date.now();
+              const temAcaoLocalRecente = partidaAtual.value?.ultimaAcaoLocal && 
+                                           (agora - partidaAtual.value.ultimaAcaoLocal) < 5000;
+              
+              if (temAcaoLocalRecente) {
+                console.log('⏸️ Ignorando sync - ação local recente');
+                return;
+              }
+              
               console.log('🔄 Atualizando torneio do servidor');
               
               // Salvar posição atual da partida se estiver em uma
@@ -848,8 +858,10 @@ createApp({
       // Marcar ação local
       partidaAtual.value.ultimaAcaoLocal = Date.now();
       
-      // Salvar progresso
-      salvarProgresso();
+      // Salvar progresso com delay para evitar conflitos
+      setTimeout(() => {
+        salvarProgresso();
+      }, 100);
     }
 
     // Adicionar pontos a uma mão

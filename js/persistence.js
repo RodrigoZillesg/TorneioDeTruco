@@ -480,7 +480,7 @@ window.PersistenceManager = (function() {
       } catch (error) {
         console.warn('Erro na sincronização periódica:', error);
       }
-    }, 3000); // A cada 3 segundos para tempo real
+    }, 5000); // A cada 5 segundos para evitar conflitos
   }
 
   /**

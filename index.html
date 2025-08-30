@@ -416,6 +416,14 @@
                        class="border rounded-lg overflow-hidden"
                        :class="obterClassePartida(partida)">
                     
+                    <!-- Header da Mesa -->
+                    <div v-if="partida.maos && partida.maos.length > 0 && partida.status === 'pendente'" 
+                         class="bg-blue-50 px-3 py-1 text-center border-b border-blue-200">
+                      <div class="text-xs text-blue-700">
+                        Mesa {{ partida.mesa }} • Mão {{ partida.maos.length + 1 }} de {{ torneioAtual?.regras?.melhorDe || 3 }}
+                      </div>
+                    </div>
+                    
                     <!-- Dupla A -->
                     <div class="p-3 border-b" 
                          :class="partida.vencedor === partida.duplaA ? 'bg-green-50 border-green-200' : 'bg-white'">
@@ -423,8 +431,11 @@
                         <div class="flex-1">
                           <div v-if="partida.duplaA" class="font-medium text-sm">
                             {{ obterNomeDupla(partida.duplaA) }}
-                            <span v-if="partida.maos && partida.maos.length > 0 && partida.status === 'pendente'" class="ml-2 text-brand-600 font-bold">
-                              {{ obterPontuacaoDetalhada(partida, partida.duplaA)?.textoCompleto }}
+                            <span v-if="partida.maos && partida.maos.length > 0 && partida.status === 'pendente'" class="ml-2">
+                              <span class="text-brand-600 font-bold">{{ contarVitoriasMaos(partida, partida.duplaA) }}</span>
+                              <span v-if="obterPontuacaoDetalhada(partida, partida.duplaA)?.tentosAtuais > 0" class="text-xs text-gray-600">
+                                ({{ obterPontuacaoDetalhada(partida, partida.duplaA)?.tentosAtuais }}t)
+                              </span>
                             </span>
                           </div>
                           <div v-else class="text-slate-400 text-sm italic">
@@ -444,8 +455,11 @@
                         <div class="flex-1">
                           <div v-if="partida.duplaB" class="font-medium text-sm">
                             {{ obterNomeDupla(partida.duplaB) }}
-                            <span v-if="partida.maos && partida.maos.length > 0 && partida.status === 'pendente'" class="ml-2 text-brand-600 font-bold">
-                              {{ obterPontuacaoDetalhada(partida, partida.duplaB)?.textoCompleto }}
+                            <span v-if="partida.maos && partida.maos.length > 0 && partida.status === 'pendente'" class="ml-2">
+                              <span class="text-brand-600 font-bold">{{ contarVitoriasMaos(partida, partida.duplaB) }}</span>
+                              <span v-if="obterPontuacaoDetalhada(partida, partida.duplaB)?.tentosAtuais > 0" class="text-xs text-gray-600">
+                                ({{ obterPontuacaoDetalhada(partida, partida.duplaB)?.tentosAtuais }}t)
+                              </span>
                             </span>
                           </div>
                           <div v-else-if="partida.duplaA && !partida.duplaB && partida.status === 'concluida'" class="text-slate-400 text-sm italic">

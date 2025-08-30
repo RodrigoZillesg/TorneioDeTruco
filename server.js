@@ -8,6 +8,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs').promises;
 
 const app = express();
 const server = http.createServer(app);
@@ -36,6 +37,9 @@ app.get('/', (req, res) => {
 // Armazenamento em memória dos torneios ativos
 const torneiosAtivos = new Map();
 const clientesTorneio = new Map();
+
+// Arquivo para persistência de torneios
+const ARQUIVO_TORNEIOS = 'torneios-persistentes.json';
 
 // Estrutura de um torneio ativo
 class TorneioAtivo {
@@ -235,6 +239,26 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
+// Funções de persistência
+async function carregarTorneisPersistentes() {
+  try {
+    const data = await fs.readFile(ARQUIVO_TORNEIOS, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    return { torneios: {} };
+  }
+}
+
+async function salvarTorneisPersistentes(dados) {
+  try {
+    await fs.writeFile(ARQUIVO_TORNEIOS, JSON.stringify(dados, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Erro ao salvar torneios:', error);
+    return false;
+  }
+}
+
 // API REST - Status do servidor
 app.get('/api/status', (req, res) => {
   res.json({
@@ -246,17 +270,98 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-// API REST - Listar torneios ativos
-app.get('/api/torneios', (req, res) => {
-  const torneios = [];
-  for (const [id, torneio] of torneiosAtivos.entries()) {
-    torneios.push({
-      id,
-      clientesConectados: torneio.clientes.size,
-      ultimaAtualizacao: torneio.ultimaAtualizacao
-    });
+// API REST - Listar torneios persistentes
+app.get('/api/torneios', async (req, res) => {
+  try {
+    const dados = await carregarTorneisPersistentes();
+    const lista = Object.values(dados.torneios || {})
+      .sort((a, b) => new Date(b.modificadoEm || b.criadoEm) - new Date(a.modificadoEm || a.criadoEm))
+      .slice(0, 50);
+    
+    res.json({ success: true, torneios: lista });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
-  res.json(torneios);
+});
+
+// API REST - Obter torneio específico
+app.get('/api/torneios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const dados = await carregarTorneisPersistentes();
+    const torneio = dados.torneios[id];
+    
+    if (!torneio) {
+      return res.status(404).json({ success: false, error: 'Torneio não encontrado' });
+    }
+    
+    res.json({ success: true, torneio });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// API REST - Salvar/atualizar torneio
+app.post('/api/torneios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const torneio = req.body;
+    
+    if (!torneio || !torneio.nome) {
+      return res.status(400).json({ success: false, error: 'Dados do torneio inválidos' });
+    }
+    
+    const dados = await carregarTorneisPersistentes();
+    
+    // Adicionar metadados
+    torneio.id = id;
+    torneio.modificadoEm = new Date().toISOString();
+    if (!torneio.criadoEm) {
+      torneio.criadoEm = torneio.modificadoEm;
+    }
+    
+    dados.torneios[id] = torneio;
+    
+    const salvou = await salvarTorneisPersistentes(dados);
+    if (!salvou) {
+      return res.status(500).json({ success: false, error: 'Erro ao salvar' });
+    }
+    
+    // Notificar via WebSocket se há clientes conectados
+    if (torneiosAtivos.has(id)) {
+      io.to(id).emit('torneio-atualizado', {
+        torneio,
+        timestamp: Date.now()
+      });
+    }
+    
+    res.json({ success: true, torneio });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// API REST - Deletar torneio
+app.delete('/api/torneios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const dados = await carregarTorneisPersistentes();
+    
+    if (!dados.torneios[id]) {
+      return res.status(404).json({ success: false, error: 'Torneio não encontrado' });
+    }
+    
+    delete dados.torneios[id];
+    
+    const salvou = await salvarTorneisPersistentes(dados);
+    if (!salvou) {
+      return res.status(500).json({ success: false, error: 'Erro ao deletar' });
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // Iniciar servidor

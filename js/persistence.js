@@ -14,7 +14,7 @@ window.PersistenceManager = (function() {
   /**
    * Salva dados do torneio em múltiplos locais
    */
-  function salvarTorneio(torneio) {
+  async function salvarTorneio(torneio) {
     if (!torneio) return false;
     
     try {
@@ -41,7 +41,17 @@ window.PersistenceManager = (function() {
       // Registrar na lista de torneios públicos
       salvarTorneioPublico(torneio);
       
-      // 5. Disparar evento para sincronização entre abas
+      // 5. Salvar no servidor via API para sincronização entre dispositivos
+      if (window.ApiClient) {
+        try {
+          await window.ApiClient.salvar(torneio.id, torneio);
+          console.log('🌐 Torneio sincronizado no servidor');
+        } catch (error) {
+          console.warn('Falha ao sincronizar no servidor:', error);
+        }
+      }
+      
+      // 6. Disparar evento para sincronização entre abas
       window.dispatchEvent(new StorageEvent('storage', {
         key: TORNEIO_ATUAL_KEY,
         newValue: dadosString,
@@ -50,7 +60,7 @@ window.PersistenceManager = (function() {
         url: window.location.href
       }));
       
-      // 6. Broadcast via BroadcastChannel (se disponível)
+      // 7. Broadcast via BroadcastChannel (se disponível)
       if (typeof BroadcastChannel !== 'undefined') {
         try {
           const channel = new BroadcastChannel('torneio_sync');
@@ -139,7 +149,7 @@ window.PersistenceManager = (function() {
   /**
    * Carrega dados do torneio de qualquer fonte disponível
    */
-  function carregarTorneio() {
+  async function carregarTorneio() {
     let torneio = null;
     
     // 1. Tentar localStorage primeiro
@@ -154,7 +164,20 @@ window.PersistenceManager = (function() {
       console.warn('Erro ao carregar do localStorage:', error);
     }
     
-    // 2. Se não encontrou, tentar sessionStorage
+    // 2. Se não encontrou, tentar carregar do servidor
+    if (!torneio && window.ApiClient) {
+      try {
+        const response = await window.ApiClient.listar();
+        if (response.success && response.torneios.length > 0) {
+          torneio = response.torneios[0]; // Mais recente
+          console.log('🌐 Torneio carregado do servidor');
+        }
+      } catch (error) {
+        console.warn('Erro ao carregar do servidor:', error);
+      }
+    }
+    
+    // 3. Se não encontrou, tentar sessionStorage
     if (!torneio) {
       try {
         const dados = sessionStorage.getItem(TORNEIO_ATUAL_KEY);
@@ -167,19 +190,19 @@ window.PersistenceManager = (function() {
       }
     }
     
-    // 3. Se ainda não encontrou, procurar torneios compartilhados
+    // 4. Se ainda não encontrou, procurar torneios compartilhados
     if (!torneio) {
       torneio = procurarTorneioCompartilhado();
     }
     
-    // 4. Se ainda não encontrou, procurar backups
+    // 5. Se ainda não encontrou, procurar backups
     if (!torneio) {
       torneio = procurarBackups();
     }
     
-    // 5. Se encontrou algum torneio, re-salvar em todos os locais
+    // 6. Se encontrou algum torneio, re-salvar em todos os locais
     if (torneio) {
-      salvarTorneio(torneio);
+      await salvarTorneio(torneio);
     }
     
     return torneio;
@@ -419,15 +442,72 @@ window.PersistenceManager = (function() {
     }, 5000); // Verificar a cada 5 segundos
   }
   
+  /**
+   * Lista torneios do servidor
+   */
+  async function listarTorneiosServidor() {
+    if (!window.ApiClient) return [];
+    
+    try {
+      const response = await window.ApiClient.listar();
+      return response.success ? response.torneios : [];
+    } catch (error) {
+      console.warn('Erro ao listar torneios do servidor:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Sincronização periódica com servidor
+   */
+  function iniciarSincronizacaoServidor(callback) {
+    if (!window.ApiClient) return;
+    
+    setInterval(async () => {
+      try {
+        const torneiosServidor = await listarTorneiosServidor();
+        if (torneiosServidor.length > 0) {
+          const maisRecente = torneiosServidor[0];
+          const torneioLocal = carregarTorneioLocal();
+          
+          // Se o servidor tem torneio mais recente, atualizar local
+          if (!torneioLocal || new Date(maisRecente.modificadoEm) > new Date(torneioLocal.modificadoEm || 0)) {
+            console.log('🔄 Sincronizando torneio do servidor');
+            await salvarTorneio(maisRecente);
+            if (callback) callback(maisRecente);
+          }
+        }
+      } catch (error) {
+        console.warn('Erro na sincronização periódica:', error);
+      }
+    }, 10000); // A cada 10 segundos
+  }
+
+  /**
+   * Carrega torneio apenas do localStorage (sem API)
+   */
+  function carregarTorneioLocal() {
+    try {
+      const dados = localStorage.getItem(TORNEIO_ATUAL_KEY) || 
+                   localStorage.getItem(STORAGE_KEY);
+      return dados ? JSON.parse(dados) : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
   // API pública
   return {
     salvar: salvarTorneio,
     carregar: carregarTorneio,
+    carregarLocal: carregarTorneioLocal,
     carregarAsync: carregarIndexedDB,
     listarPublicos: listarTorneiosPublicos,
+    listarServidor: listarTorneiosServidor,
     limpar: limparTudo,
     temDados: temDadosSalvos,
     configurarSync: configurarSincronizacao,
+    iniciarSyncServidor: iniciarSincronizacaoServidor,
     ultimaSync: getUltimaSync
   };
 })();

@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '1.2.4',
+  VERSION: '1.2.5',
   BUILD_DATE: '2024-08-30',
-  LAST_UPDATE: '15:45',
+  LAST_UPDATE: '16:00',
   
   // Changelog resumido
   CHANGES: {
+    '1.2.5': 'Implementação: API REST para sincronização real entre dispositivos',
     '1.2.4': 'Correção: Remover indicador Local do header',
     '1.2.3': 'Correções: Exclusão de torneio, bracket e interface mobile',
     '1.2.2': 'Correção: Sincronização de dados entre dispositivos',

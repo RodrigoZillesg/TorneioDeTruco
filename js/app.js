@@ -296,7 +296,7 @@ createApp({
       
       // Tentar carregar torneio salvo do PersistenceManager
       if (window.PersistenceManager) {
-        const torneioSalvo = window.PersistenceManager.carregar();
+        const torneioSalvo = await window.PersistenceManager.carregar();
         if (torneioSalvo && !torneioAtual.value) {
           console.log('📂 Torneio restaurado da persistência');
           torneioAtual.value = torneioSalvo;
@@ -328,7 +328,7 @@ createApp({
           }
         }
         
-        // Configurar sincronização automática
+        // Configurar sincronização automática local
         window.PersistenceManager.configurarSync((torneioAtualizado) => {
           if (torneioAtualizado && torneioAtualizado.id === torneioAtual.value?.id) {
             console.log('🔄 Torneio sincronizado de outro dispositivo');
@@ -342,6 +342,25 @@ createApp({
             }
             
             mostrarToast('Dados sincronizados', 'sucesso');
+          }
+        });
+        
+        // Configurar sincronização com servidor
+        window.PersistenceManager.iniciarSyncServidor((torneioAtualizado) => {
+          if (torneioAtualizado && (!torneioAtual.value || torneioAtualizado.id !== torneioAtual.value.id)) {
+            console.log('🌐 Novo torneio detectado no servidor');
+            torneioAtual.value = torneioAtualizado;
+            torneioCompartilhado.value = torneioAtualizado;
+            
+            if (torneioAtualizado.duplas) {
+              duplas.value = torneioAtualizado.duplas;
+            }
+            if (torneioAtualizado.bracket) {
+              bracket.value = torneioAtualizado.bracket;
+              carregarBracket();
+            }
+            
+            mostrarToast('Torneio sincronizado do servidor!', 'sucesso');
           }
         });
       }

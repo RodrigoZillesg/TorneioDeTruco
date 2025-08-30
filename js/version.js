@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '1.2.3',
+  VERSION: '1.2.4',
   BUILD_DATE: '2024-08-30',
-  LAST_UPDATE: '15:30',
+  LAST_UPDATE: '15:45',
   
   // Changelog resumido
   CHANGES: {
+    '1.2.4': 'Correção: Remover indicador Local do header',
     '1.2.3': 'Correções: Exclusão de torneio, bracket e interface mobile',
     '1.2.2': 'Correção: Sincronização de dados entre dispositivos',
     '1.2.1': 'Adicionado sistema de versionamento visível no header',

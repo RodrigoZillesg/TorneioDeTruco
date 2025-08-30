@@ -5,6 +5,7 @@ createApp({
     const currentRoute = ref('home');
     const torneioAtual = ref(null);
     const torneiosSalvos = ref([]);
+    const torneioCompartilhado = ref(null);
     const toast = reactive({
       show: false,
       message: '',
@@ -286,6 +287,7 @@ createApp({
         if (torneioSalvo && !torneioAtual.value) {
           console.log('📂 Torneio restaurado da persistência');
           torneioAtual.value = torneioSalvo;
+          torneioCompartilhado.value = torneioSalvo;
           
           // Carregar dados relacionados
           if (torneioSalvo.duplas) {
@@ -302,6 +304,14 @@ createApp({
             navigate('bracket');
           } else if (torneioSalvo.duplas?.length > 0) {
             navigate('duplas');
+          }
+        } else {
+          // Se não há torneio ativo, verificar se há torneios compartilhados
+          const torneiosPublicos = window.PersistenceManager.listarPublicos();
+          if (torneiosPublicos.length > 0) {
+            const maisRecente = torneiosPublicos[0];
+            console.log(`🔍 Torneio compartilhado disponível: ${maisRecente.nome}`);
+            torneioCompartilhado.value = maisRecente;
           }
         }
         
@@ -1471,6 +1481,7 @@ createApp({
       currentRoute,
       torneioAtual,
       torneiosSalvos,
+      torneioCompartilhado,
       toast,
       novoTorneio,
       pageTitle,

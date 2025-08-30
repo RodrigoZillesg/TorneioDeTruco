@@ -9,6 +9,7 @@ window.PersistenceManager = (function() {
   const STORAGE_KEY = 'torneio_truco_data';
   const SYNC_KEY = 'torneio_sync_timestamp';
   const TORNEIO_ATUAL_KEY = 'torneioAtual';
+  const TORNEIOS_PUBLICOS_KEY = 'torneios_publicos_compartilhados';
   
   /**
    * Salva dados do torneio em múltiplos locais
@@ -33,7 +34,14 @@ window.PersistenceManager = (function() {
         salvarIndexedDB(torneio);
       }
       
-      // 4. Disparar evento para sincronização entre abas
+      // 4. Salvar como torneio compartilhável (chave única global)
+      const chaveCompartilhada = `torneio_global_${torneio.id}`;
+      localStorage.setItem(chaveCompartilhada, dadosString);
+      
+      // Registrar na lista de torneios públicos
+      salvarTorneioPublico(torneio);
+      
+      // 5. Disparar evento para sincronização entre abas
       window.dispatchEvent(new StorageEvent('storage', {
         key: TORNEIO_ATUAL_KEY,
         newValue: dadosString,
@@ -42,7 +50,7 @@ window.PersistenceManager = (function() {
         url: window.location.href
       }));
       
-      // 5. Broadcast via BroadcastChannel (se disponível)
+      // 6. Broadcast via BroadcastChannel (se disponível)
       if (typeof BroadcastChannel !== 'undefined') {
         try {
           const channel = new BroadcastChannel('torneio_sync');
@@ -72,6 +80,60 @@ window.PersistenceManager = (function() {
       
       return false;
     }
+  }
+  
+  /**
+   * Salva torneio na lista pública compartilhada
+   */
+  function salvarTorneioPublico(torneio) {
+    try {
+      let torneiosPublicos = [];
+      
+      const dados = localStorage.getItem(TORNEIOS_PUBLICOS_KEY);
+      if (dados) {
+        torneiosPublicos = JSON.parse(dados);
+      }
+      
+      // Remover versão anterior se existir
+      torneiosPublicos = torneiosPublicos.filter(t => t.id !== torneio.id);
+      
+      // Adicionar versão atual
+      torneiosPublicos.push({
+        id: torneio.id,
+        nome: torneio.nome,
+        status: torneio.status,
+        criadoEm: torneio.criadoEm,
+        modificadoEm: torneio.modificadoEm || new Date().toISOString(),
+        deviceInfo: navigator.userAgent.substring(0, 50)
+      });
+      
+      // Manter apenas os 10 mais recentes
+      torneiosPublicos.sort((a, b) => new Date(b.modificadoEm) - new Date(a.modificadoEm));
+      torneiosPublicos = torneiosPublicos.slice(0, 10);
+      
+      localStorage.setItem(TORNEIOS_PUBLICOS_KEY, JSON.stringify(torneiosPublicos));
+      console.log('📝 Torneio adicionado à lista pública');
+      
+    } catch (error) {
+      console.error('Erro ao salvar torneio público:', error);
+    }
+  }
+  
+  /**
+   * Lista todos os torneios compartilhados disponíveis
+   */
+  function listarTorneiosPublicos() {
+    try {
+      const dados = localStorage.getItem(TORNEIOS_PUBLICOS_KEY);
+      if (dados) {
+        const lista = JSON.parse(dados);
+        console.log(`📋 ${lista.length} torneios públicos encontrados`);
+        return lista;
+      }
+    } catch (error) {
+      console.error('Erro ao listar torneios públicos:', error);
+    }
+    return [];
   }
   
   /**
@@ -105,17 +167,74 @@ window.PersistenceManager = (function() {
       }
     }
     
-    // 3. Se ainda não encontrou, procurar backups
+    // 3. Se ainda não encontrou, procurar torneios compartilhados
+    if (!torneio) {
+      torneio = procurarTorneioCompartilhado();
+    }
+    
+    // 4. Se ainda não encontrou, procurar backups
     if (!torneio) {
       torneio = procurarBackups();
     }
     
-    // 4. Se encontrou algum torneio, re-salvar em todos os locais
+    // 5. Se encontrou algum torneio, re-salvar em todos os locais
     if (torneio) {
       salvarTorneio(torneio);
     }
     
     return torneio;
+  }
+  
+  /**
+   * Procura por torneios compartilhados de outros dispositivos
+   */
+  function procurarTorneioCompartilhado() {
+    try {
+      // Procurar por chaves de torneios globais
+      for (let i = 0; i < localStorage.length; i++) {
+        const chave = localStorage.key(i);
+        if (chave && chave.startsWith('torneio_global_')) {
+          try {
+            const dados = localStorage.getItem(chave);
+            if (dados) {
+              const torneio = JSON.parse(dados);
+              
+              // Verificar se é recente (últimas 24 horas)
+              const agora = Date.now();
+              const criadoEm = new Date(torneio.criadoEm).getTime();
+              const umDia = 24 * 60 * 60 * 1000;
+              
+              if (agora - criadoEm < umDia) {
+                console.log(`🔄 Torneio compartilhado encontrado: ${torneio.nome}`);
+                return torneio;
+              }
+            }
+          } catch (e) {
+            console.warn('Dados de torneio corrompidos:', chave);
+            localStorage.removeItem(chave);
+          }
+        }
+      }
+      
+      // Também verificar lista de torneios públicos
+      const torneiosPublicos = listarTorneiosPublicos();
+      if (torneiosPublicos.length > 0) {
+        const maisRecente = torneiosPublicos[0];
+        const chaveGlobal = `torneio_global_${maisRecente.id}`;
+        const dados = localStorage.getItem(chaveGlobal);
+        
+        if (dados) {
+          const torneio = JSON.parse(dados);
+          console.log(`📋 Torneio carregado da lista pública: ${torneio.nome}`);
+          return torneio;
+        }
+      }
+      
+    } catch (error) {
+      console.error('Erro ao procurar torneios compartilhados:', error);
+    }
+    
+    return null;
   }
   
   /**
@@ -305,6 +424,7 @@ window.PersistenceManager = (function() {
     salvar: salvarTorneio,
     carregar: carregarTorneio,
     carregarAsync: carregarIndexedDB,
+    listarPublicos: listarTorneiosPublicos,
     limpar: limparTudo,
     temDados: temDadosSalvos,
     configurarSync: configurarSincronizacao,

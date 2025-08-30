@@ -79,6 +79,29 @@
           
         </div>
 
+        <!-- Torneio Compartilhado Ativo -->
+        <div v-if="torneioCompartilhado" class="mt-6">
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <h3 class="text-lg font-semibold text-green-700">Torneio Ativo</h3>
+            </div>
+            <div class="flex justify-between items-center">
+              <div>
+                <h4 class="font-medium">{{ torneioCompartilhado.nome }}</h4>
+                <p class="text-sm text-green-600">{{ formatarData(torneioCompartilhado.criadoEm) }}</p>
+                <span class="inline-block mt-1 px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">
+                  {{ torneioCompartilhado.status === 'concluido' ? 'Finalizado' : 'Em andamento' }}
+                </span>
+              </div>
+              <button @click="abrirTorneio(torneioCompartilhado.id)" 
+                      class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 text-sm">
+                Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Lista de torneios salvos -->
         <div v-if="torneiosSalvos.length > 0" class="mt-8">
           <h3 class="text-lg font-semibold mb-4">Torneios Salvos</h3>

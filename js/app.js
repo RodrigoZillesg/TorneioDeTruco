@@ -275,6 +275,49 @@ createApp({
       carregarBackups();
       initRouter();
       
+      // Tentar carregar torneio salvo do PersistenceManager
+      if (window.PersistenceManager) {
+        const torneioSalvo = window.PersistenceManager.carregar();
+        if (torneioSalvo && !torneioAtual.value) {
+          console.log('📂 Torneio restaurado da persistência');
+          torneioAtual.value = torneioSalvo;
+          
+          // Carregar dados relacionados
+          if (torneioSalvo.duplas) {
+            duplas.value = torneioSalvo.duplas;
+          }
+          if (torneioSalvo.bracket) {
+            bracket.value = torneioSalvo.bracket;
+          }
+          
+          // Navegar para a tela apropriada
+          if (torneioSalvo.status === 'finalizado') {
+            navigate('bracket');
+          } else if (torneioSalvo.bracket?.rodadas?.length > 0) {
+            navigate('bracket');
+          } else if (torneioSalvo.duplas?.length > 0) {
+            navigate('duplas');
+          }
+        }
+        
+        // Configurar sincronização automática
+        window.PersistenceManager.configurarSync((torneioAtualizado) => {
+          if (torneioAtualizado && torneioAtualizado.id === torneioAtual.value?.id) {
+            console.log('🔄 Torneio sincronizado de outro dispositivo');
+            torneioAtual.value = torneioAtualizado;
+            
+            if (torneioAtualizado.duplas) {
+              duplas.value = torneioAtualizado.duplas;
+            }
+            if (torneioAtualizado.bracket) {
+              bracket.value = torneioAtualizado.bracket;
+            }
+            
+            mostrarToast('Dados sincronizados', 'sucesso');
+          }
+        });
+      }
+      
       // Event listener para torneio compartilhado
       window.addEventListener('torneioCompartilhado', processarTorneioCompartilhado);
     });
@@ -552,6 +595,19 @@ createApp({
           await db.torneios.put(torneioLimpo);
         } else {
           await db.torneios.add(torneioLimpo);
+        }
+        
+        // Salvar com PersistenceManager para sincronização entre dispositivos
+        if (window.PersistenceManager) {
+          const dadosCompletos = {
+            ...torneioLimpo,
+            duplas: [...duplas.value],
+            bracket: bracket.value ? {...bracket.value} : null,
+            modificadoEm: new Date().toISOString()
+          };
+          
+          window.PersistenceManager.salvar(dadosCompletos);
+          console.log('💾 Torneio salvo e sincronizado');
         }
       } catch (error) {
         console.error('Erro ao salvar torneio:', error);

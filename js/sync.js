@@ -83,11 +83,19 @@ window.syncFunctions = (function() {
    */
   function inicializarWebSocket(tournamentId) {
     try {
+      // Verificar se Socket.IO está disponível
+      if (typeof io === 'undefined' || window.ioUnavailable) {
+        console.log('Socket.IO não disponível, usando fallback local');
+        inicializarFallback(tournamentId);
+        return;
+      }
+      
       // Conectar ao servidor Socket.IO
       socket = io(window.location.origin, {
         reconnection: true,
         reconnectionDelay: 1000,
-        reconnectionAttempts: 5
+        reconnectionAttempts: 5,
+        timeout: 5000
       });
       
       // Eventos de conexão

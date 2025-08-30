@@ -28,11 +28,33 @@
   <div id="app" class="min-h-dvh flex flex-col">
     <!-- Header -->
     <header class="px-4 py-3 border-b bg-white sticky top-0 z-10 relative">
-      <div class="flex items-center">
-        <button v-if="canGoBack" @click="goBack" class="text-brand-600 mr-3">
-          ← Voltar
-        </button>
-        <h1 class="text-xl font-bold text-brand-700">{{ pageTitle || 'Torneio de Truco' }}</h1>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <button v-if="canGoBack" @click="goBack" class="text-brand-600 mr-3">
+            ← Voltar
+          </button>
+          <h1 class="text-xl font-bold text-brand-700">{{ pageTitle || 'Torneio de Truco' }}</h1>
+        </div>
+        
+        <!-- Indicador de Status de Sincronização -->
+        <div v-if="torneioAtual" class="flex items-center gap-2 text-sm">
+          <span v-if="syncStatus === 'conectado'" class="flex items-center gap-1 text-green-600">
+            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            Online
+          </span>
+          <span v-else-if="syncStatus === 'sincronizando'" class="flex items-center gap-1 text-yellow-600">
+            <span class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+            Sincronizando
+          </span>
+          <span v-else class="flex items-center gap-1 text-gray-500">
+            <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+            Local
+          </span>
+          
+          <span v-if="clientesConectados > 1" class="text-xs text-gray-600">
+            ({{ clientesConectados }} dispositivos)
+          </span>
+        </div>
       </div>
     </header>
 
@@ -1052,10 +1074,25 @@
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 
   <!-- Socket.IO (carregado condicionalmente se servidor disponível) -->
-  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Tentar carregar Socket.IO dinamicamente
+    (function() {
+      const script = document.createElement('script');
+      script.src = '/socket.io/socket.io.js';
+      script.onerror = function() {
+        console.warn('Socket.IO não disponível - usando sincronização local');
+        window.ioUnavailable = true;
+      };
+      script.onload = function() {
+        console.log('Socket.IO carregado com sucesso');
+      };
+      document.head.appendChild(script);
+    })();
+  </script>
   
   <!-- Scripts do app -->
   <script src="js/db.js"></script>
+  <script src="js/persistence.js"></script>
   <script src="js/bracket.js"></script>
   <script src="js/scoring.js"></script>
   <script src="js/export.js"></script>

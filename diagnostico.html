@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico - Sistema de Torneio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .success { background: #4CAF50; color: white; }
+        .error { background: #f44336; color: white; }
+        .warning { background: #ff9800; color: white; }
+        .info { background: #2196F3; color: white; }
+        pre {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background: #2196F3;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #ccc;
+        }
+        .test-result.pass {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        .test-result.fail {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Diagnóstico do Sistema de Torneio</h1>
+    
+    <div class="card">
+        <h2>1. Status do Navegador</h2>
+        <div id="browser-info"></div>
+    </div>
+
+    <div class="card">
+        <h2>2. LocalStorage / IndexedDB</h2>
+        <div id="storage-info"></div>
+        <button onclick="checkStorage()">Verificar Armazenamento</button>
+        <button onclick="clearStorage()">Limpar Tudo</button>
+    </div>
+
+    <div class="card">
+        <h2>3. WebSocket / Socket.IO</h2>
+        <div id="websocket-info"></div>
+        <button onclick="testWebSocket()">Testar Conexão</button>
+    </div>
+
+    <div class="card">
+        <h2>4. Dados de Torneios</h2>
+        <div id="tournament-data"></div>
+        <button onclick="loadTournaments()">Carregar Torneios</button>
+        <button onclick="createTestTournament()">Criar Torneio Teste</button>
+    </div>
+
+    <div class="card">
+        <h2>5. Teste de Sincronização</h2>
+        <div id="sync-test"></div>
+        <button onclick="testSync()">Testar Sincronização</button>
+    </div>
+
+    <div class="card">
+        <h2>6. Logs do Console</h2>
+        <div id="console-logs" style="max-height: 300px; overflow-y: auto;"></div>
+    </div>
+
+    <script>
+        // Capturar logs do console
+        const logContainer = document.getElementById('console-logs');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function addLog(type, ...args) {
+            const logEntry = document.createElement('div');
+            logEntry.className = `test-result ${type === 'error' ? 'fail' : 'pass'}`;
+            logEntry.innerHTML = `<span class="status ${type}">${type.toUpperCase()}</span> ${args.join(' ')}`;
+            logContainer.appendChild(logEntry);
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLog('log', ...args);
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog('error', ...args);
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addLog('warning', ...args);
+        };
+
+        // 1. Informações do Navegador
+        function checkBrowser() {
+            const info = document.getElementById('browser-info');
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            info.innerHTML = `
+                <p><strong>User Agent:</strong> ${navigator.userAgent}</p>
+                <p><strong>Dispositivo:</strong> <span class="status info">${isMobile ? 'Mobile' : 'Desktop'}</span></p>
+                <p><strong>Online:</strong> <span class="status ${navigator.onLine ? 'success' : 'error'}">${navigator.onLine ? 'Sim' : 'Não'}</span></p>
+                <p><strong>URL Atual:</strong> ${window.location.href}</p>
+                <p><strong>Protocolo:</strong> ${window.location.protocol}</p>
+            `;
+        }
+
+        // 2. Verificar Armazenamento
+        async function checkStorage() {
+            const info = document.getElementById('storage-info');
+            let html = '<h3>LocalStorage:</h3>';
+            
+            // LocalStorage
+            const localStorageKeys = Object.keys(localStorage);
+            if (localStorageKeys.length > 0) {
+                html += '<ul>';
+                localStorageKeys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    const preview = value && value.length > 100 ? value.substring(0, 100) + '...' : value;
+                    html += `<li><strong>${key}:</strong> ${preview}</li>`;
+                });
+                html += '</ul>';
+            } else {
+                html += '<p class="status warning">LocalStorage vazio</p>';
+            }
+
+            // IndexedDB
+            html += '<h3>IndexedDB (Dexie):</h3>';
+            try {
+                // Tentar abrir o banco Dexie
+                const db = new Dexie('TorneioTrucoDB');
+                db.version(1).stores({
+                    torneios: '++id, nome, status, criadoEm',
+                    duplas: '++id, torneioId, nome',
+                    partidas: '++id, torneioId, rodada'
+                });
+                
+                await db.open();
+                
+                const torneios = await db.torneios.toArray();
+                const duplas = await db.duplas.toArray();
+                const partidas = await db.partidas.toArray();
+                
+                html += `
+                    <p>Torneios: <span class="status info">${torneios.length}</span></p>
+                    <p>Duplas: <span class="status info">${duplas.length}</span></p>
+                    <p>Partidas: <span class="status info">${partidas.length}</span></p>
+                `;
+                
+                if (torneios.length > 0) {
+                    html += '<h4>Torneios encontrados:</h4><ul>';
+                    torneios.forEach(t => {
+                        html += `<li>${t.nome} - Status: ${t.status}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                
+                db.close();
+            } catch (error) {
+                html += `<p class="status error">Erro ao acessar IndexedDB: ${error.message}</p>`;
+            }
+            
+            info.innerHTML = html;
+        }
+
+        // 3. Testar WebSocket
+        async function testWebSocket() {
+            const info = document.getElementById('websocket-info');
+            info.innerHTML = '<p>Testando conexão WebSocket...</p>';
+            
+            // Verificar se Socket.IO está disponível
+            if (typeof io === 'undefined') {
+                info.innerHTML = '<p class="status error">Socket.IO não está carregado!</p>';
+                
+                // Tentar carregar Socket.IO
+                try {
+                    const script = document.createElement('script');
+                    script.src = '/socket.io/socket.io.js';
+                    script.onload = () => {
+                        info.innerHTML += '<p class="status success">Socket.IO carregado dinamicamente</p>';
+                        connectWebSocket();
+                    };
+                    script.onerror = () => {
+                        info.innerHTML += '<p class="status error">Falha ao carregar Socket.IO do servidor</p>';
+                    };
+                    document.head.appendChild(script);
+                } catch (error) {
+                    info.innerHTML += `<p class="status error">Erro: ${error.message}</p>`;
+                }
+            } else {
+                connectWebSocket();
+            }
+        }
+
+        function connectWebSocket() {
+            const info = document.getElementById('websocket-info');
+            
+            try {
+                const socket = io(window.location.origin, {
+                    reconnection: true,
+                    reconnectionDelay: 1000
+                });
+                
+                socket.on('connect', () => {
+                    info.innerHTML = '<p class="status success">WebSocket conectado!</p>';
+                    info.innerHTML += `<p>Socket ID: ${socket.id}</p>`;
+                });
+                
+                socket.on('disconnect', () => {
+                    info.innerHTML += '<p class="status error">WebSocket desconectado!</p>';
+                });
+                
+                socket.on('connect_error', (error) => {
+                    info.innerHTML += `<p class="status error">Erro de conexão: ${error.message}</p>`;
+                });
+                
+                // Timeout para verificar conexão
+                setTimeout(() => {
+                    if (!socket.connected) {
+                        info.innerHTML += '<p class="status warning">Conexão WebSocket demorou muito. Servidor pode estar offline.</p>';
+                    }
+                }, 5000);
+                
+            } catch (error) {
+                info.innerHTML = `<p class="status error">Erro ao conectar: ${error.message}</p>`;
+            }
+        }
+
+        // 4. Carregar Torneios
+        async function loadTournaments() {
+            const info = document.getElementById('tournament-data');
+            
+            // Verificar localStorage
+            const torneioAtual = localStorage.getItem('torneioAtual');
+            
+            if (torneioAtual) {
+                try {
+                    const torneio = JSON.parse(torneioAtual);
+                    info.innerHTML = '<h3>Torneio no localStorage:</h3>';
+                    info.innerHTML += `<pre>${JSON.stringify(torneio, null, 2)}</pre>`;
+                } catch (error) {
+                    info.innerHTML = `<p class="status error">Erro ao parsear torneio: ${error.message}</p>`;
+                }
+            } else {
+                info.innerHTML = '<p class="status warning">Nenhum torneio no localStorage</p>';
+            }
+        }
+
+        // 5. Criar Torneio Teste
+        function createTestTournament() {
+            const torneioTeste = {
+                id: 'teste_' + Date.now(),
+                nome: 'Torneio Teste ' + new Date().toLocaleString(),
+                status: 'configuracao',
+                duplas: [
+                    { nome: 'Dupla A', jogador1: 'João', jogador2: 'Maria' },
+                    { nome: 'Dupla B', jogador1: 'Pedro', jogador2: 'Ana' }
+                ],
+                criadoEm: new Date().toISOString()
+            };
+            
+            localStorage.setItem('torneioAtual', JSON.stringify(torneioTeste));
+            localStorage.setItem('torneio_' + torneioTeste.id, JSON.stringify(torneioTeste));
+            
+            const info = document.getElementById('tournament-data');
+            info.innerHTML = '<p class="status success">Torneio teste criado!</p>';
+            info.innerHTML += `<pre>${JSON.stringify(torneioTeste, null, 2)}</pre>`;
+            
+            // Disparar evento de storage para sincronização
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'torneioAtual',
+                newValue: JSON.stringify(torneioTeste),
+                url: window.location.href
+            }));
+        }
+
+        // 6. Testar Sincronização
+        function testSync() {
+            const info = document.getElementById('sync-test');
+            info.innerHTML = '<h3>Testando sincronização...</h3>';
+            
+            // Verificar se o módulo de sync está carregado
+            if (typeof window.syncFunctions !== 'undefined') {
+                info.innerHTML += '<p class="status success">Módulo de sincronização carregado</p>';
+                
+                // Verificar status
+                const isActive = window.syncFunctions.isActive();
+                info.innerHTML += `<p>Sincronização ativa: <span class="status ${isActive ? 'success' : 'warning'}">${isActive ? 'Sim' : 'Não'}</span></p>`;
+                
+                // Listar clientes ativos
+                const clientes = window.syncFunctions.listarClientesAtivos();
+                info.innerHTML += `<p>Clientes ativos: ${clientes.length}</p>`;
+                
+                if (clientes.length > 0) {
+                    info.innerHTML += '<ul>';
+                    clientes.forEach(c => {
+                        info.innerHTML += `<li>${c.id} - ${new Date(c.joinedAt).toLocaleString()}</li>`;
+                    });
+                    info.innerHTML += '</ul>';
+                }
+            } else {
+                info.innerHTML += '<p class="status error">Módulo de sincronização NÃO carregado!</p>';
+            }
+        }
+
+        // Limpar armazenamento
+        function clearStorage() {
+            if (confirm('Tem certeza que deseja limpar TODOS os dados?')) {
+                localStorage.clear();
+                
+                // Limpar IndexedDB
+                indexedDB.deleteDatabase('TorneioTrucoDB');
+                
+                const info = document.getElementById('storage-info');
+                info.innerHTML = '<p class="status success">Todos os dados foram limpos!</p>';
+                
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
+        }
+
+        // Carregar Dexie se não estiver disponível
+        if (typeof Dexie === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/dexie@latest/dist/dexie.js';
+            document.head.appendChild(script);
+        }
+
+        // Inicializar diagnóstico
+        window.onload = function() {
+            checkBrowser();
+            console.log('Diagnóstico iniciado');
+        };
+    </script>
+</body>
+</html>

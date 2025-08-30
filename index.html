@@ -38,27 +38,6 @@
           <span class="ml-2 text-xs text-gray-500 font-mono">{{ appVersion }}</span>
         </div>
         
-        <!-- Indicador de Status de Sincronização -->
-        <div class="flex items-center gap-2 text-sm">
-          <span v-if="torneioAtual" class="flex items-center gap-1">
-            <span v-if="syncStatus === 'conectado'" class="flex items-center gap-1 text-green-600">
-              <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              Online
-            </span>
-            <span v-else-if="syncStatus === 'sincronizando'" class="flex items-center gap-1 text-yellow-600">
-              <span class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
-              Sincronizando
-            </span>
-            <span v-else class="flex items-center gap-1 text-gray-500">
-              <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
-              Local
-            </span>
-            
-            <span v-if="clientesConectados > 1" class="text-xs text-gray-600">
-              ({{ clientesConectados }} dispositivos)
-            </span>
-          </span>
-        </div>
       </div>
     </header>
 

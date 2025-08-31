@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '1.3.0',
+  VERSION: '1.3.1',
   BUILD_DATE: '2024-08-31',
-  LAST_UPDATE: '10:55',
+  LAST_UPDATE: '11:05',
   
   // Changelog resumido
   CHANGES: {
+    '1.3.1': 'Correção: Exclusão completa de torneios (local, servidor e cache)',
     '1.3.0': 'Sistema robusto de sincronização com SyncManager e persistência no servidor',
     '1.2.9': 'Melhorias: Clareza do bracket e correção de sincronização',
     '1.2.8': 'URGENTE: Correção de erros JavaScript críticos',

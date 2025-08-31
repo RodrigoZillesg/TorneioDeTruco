@@ -125,6 +125,9 @@ createApp({
 
     async function carregarTorneiosSalvos() {
       try {
+        // Limpar lista primeiro
+        torneiosSalvos.value = [];
+        
         // Carregar torneios locais
         const torneiosLocais = await db.torneios.orderBy('criadoEm').reverse().toArray();
         
@@ -141,27 +144,44 @@ createApp({
           }
         }
         
-        // Mesclar torneios (removendo duplicatas pelo ID)
+        // Criar lista de IDs deletados (que não devem aparecer)
+        const deletedIds = new Set();
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('deleted_torneio_')) {
+            deletedIds.add(key.replace('deleted_torneio_', ''));
+          }
+        }
+        
+        // Mesclar torneios (removendo duplicatas pelo ID e deletados)
         const torneiosMap = new Map();
         
-        // Adicionar torneios locais
-        torneiosLocais.forEach(t => torneiosMap.set(t.id, t));
-        
-        // Adicionar/atualizar com torneios do servidor
-        torneiosServidor.forEach(t => {
-          const local = torneiosMap.get(t.id);
-          if (!local || new Date(t.modificadoEm) > new Date(local.modificadoEm || 0)) {
+        // Adicionar torneios locais (exceto deletados)
+        torneiosLocais.forEach(t => {
+          if (!deletedIds.has(t.id)) {
             torneiosMap.set(t.id, t);
+          }
+        });
+        
+        // Adicionar/atualizar com torneios do servidor (exceto deletados)
+        torneiosServidor.forEach(t => {
+          if (!deletedIds.has(t.id)) {
+            const local = torneiosMap.get(t.id);
+            if (!local || new Date(t.modificadoEm) > new Date(local.modificadoEm || 0)) {
+              torneiosMap.set(t.id, t);
+            }
           }
         });
         
         // Converter de volta para array e ordenar
         torneiosSalvos.value = Array.from(torneiosMap.values())
+          .filter(t => t && t.id && t.nome) // Filtrar torneios válidos
           .sort((a, b) => new Date(b.modificadoEm || b.criadoEm) - new Date(a.modificadoEm || a.criadoEm));
           
         console.log(`📁 ${torneiosSalvos.value.length} torneios carregados (${torneiosLocais.length} locais, ${torneiosServidor.length} servidor)`);
       } catch (error) {
         console.error('Erro ao carregar torneios:', error);
+        torneiosSalvos.value = [];
       }
     }
 
@@ -279,21 +299,51 @@ createApp({
       }
       
       try {
+        // 1. Excluir do banco local
         await db.torneios.delete(torneioId);
         
-        // Se for o torneio atual, limpar da persistência também
+        // 2. Excluir do servidor via API
+        if (window.ApiClient) {
+          try {
+            await window.ApiClient.deletar(torneioId);
+            console.log('Torneio excluído do servidor');
+          } catch (error) {
+            console.warn('Erro ao excluir do servidor:', error);
+          }
+        }
+        
+        // 3. Limpar localStorage e sessionStorage relacionados
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes(torneioId) || key.includes('torneio_global_' + torneioId))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        
+        // 4. Se for o torneio atual, limpar tudo
         if (torneioAtual.value?.id === torneioId) {
           torneioAtual.value = null;
           torneioCompartilhado.value = null;
           duplas.value = [];
           bracket.value = null;
           
-          // Limpar do PersistenceManager
-          if (window.PersistenceManager) {
-            window.PersistenceManager.limpar();
+          // Desconectar SyncManager se ativo
+          if (window.SyncManager) {
+            window.SyncManager.desconectar();
           }
+          
+          // Limpar chaves específicas do localStorage
+          localStorage.removeItem('torneioAtual');
+          localStorage.removeItem('torneio_truco_data');
+          sessionStorage.removeItem('torneioAtual');
         }
         
+        // 5. Marcar como deletado para não aparecer mais
+        localStorage.setItem(`deleted_torneio_${torneioId}`, 'true');
+        
+        // 6. Recarregar lista de torneios
         await carregarTorneiosSalvos();
         mostrarToast('Torneio excluído com sucesso!');
       } catch (error) {

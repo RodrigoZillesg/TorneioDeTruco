@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '1.3.1',
+  VERSION: '2.0.0',
   BUILD_DATE: '2024-08-31',
-  LAST_UPDATE: '11:05',
+  LAST_UPDATE: '11:30',
   
   // Changelog resumido
   CHANGES: {
+    '2.0.0': 'MAJOR: Sistema 100% online - Sem persistência local, tudo no servidor',
     '1.3.1': 'Correção: Exclusão completa de torneios (local, servidor e cache)',
     '1.3.0': 'Sistema robusto de sincronização com SyncManager e persistência no servidor',
     '1.2.9': 'Melhorias: Clareza do bracket e correção de sincronização',

@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '2.0.1',
+  VERSION: '2.1.0',
   BUILD_DATE: '2024-08-31',
-  LAST_UPDATE: '11:45',
+  LAST_UPDATE: '12:15',
   
   // Changelog resumido
   CHANGES: {
+    '2.1.0': 'Novo sistema: Cadastro de participantes individuais e formação de duplas',
     '2.0.1': 'Correções: Tela branca em duplas e funções faltantes',
     '2.0.0': 'MAJOR: Sistema 100% online - Sem persistência local, tudo no servidor',
     '1.3.1': 'Correção: Exclusão completa de torneios (local, servidor e cache)',

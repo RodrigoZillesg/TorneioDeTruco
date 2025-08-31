@@ -165,173 +165,134 @@
         </form>
       </div>
 
-      <!-- Tela de Cadastro de Duplas -->
-      <div v-else-if="currentRoute === 'duplas'" class="space-y-6">
-        <div class="flex justify-end items-center">
-          <span class="text-sm text-slate-600">{{ duplas.length }} dupla{{ duplas.length !== 1 ? 's' : '' }}</span>
-        </div>
-
-        <!-- Lista de Duplas Cadastradas -->
-        <div v-if="duplas.length > 0" class="space-y-3">
-          <h3 class="text-lg font-semibold flex items-center gap-2">
-            📋 Duplas Cadastradas
-            <button @click="mostrarFormularioDupla = !mostrarFormularioDupla" 
-                    class="text-sm bg-brand-100 text-brand-700 px-3 py-1 rounded-full hover:bg-brand-200">
-              {{ mostrarFormularioDupla ? 'Ocultar' : 'Adicionar' }}
-            </button>
-          </h3>
+      <!-- Página de Duplas -->
+      <div v-if="currentRoute === 'duplas'" class="space-y-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-2xl font-bold mb-4">📥 Participantes do Torneio</h2>
           
-          <!-- Lista Ordenável -->
-          <div ref="sortableList" class="space-y-2">
-            <div v-for="(dupla, index) in duplas" 
-                 :key="dupla.id" 
-                 :data-id="dupla.id"
-                 class="bg-white p-4 rounded-lg border hover:shadow-md transition-shadow cursor-move">
-              <div class="flex items-center justify-between">
-                <div class="flex-1">
-                  <div class="flex items-center gap-3">
-                    <span class="text-2xl">⚡</span>
+          <!-- Adicionar Participante -->
+          <div class="bg-slate-50 p-4 rounded-lg mb-6">
+            <h3 class="text-lg font-semibold mb-3">Adicionar Participante</h3>
+            <div class="flex gap-2">
+              <input v-model="novoParticipante" 
+                     @keyup.enter="adicionarParticipante"
+                     type="text" 
+                     placeholder="Nome do participante"
+                     class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+              <button @click="adicionarParticipante" 
+                      class="px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700">
+                Adicionar
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista de Participantes -->
+          <div v-if="participantes.length > 0" class="mb-6">
+            <h3 class="text-lg font-semibold mb-3">
+              Participantes Cadastrados ({{ participantes.length }})
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+              <div v-for="participante in participantes" :key="participante"
+                   class="bg-white border rounded-lg px-3 py-2 flex items-center justify-between hover:shadow">
+                <span class="text-sm">{{ participante }}</span>
+                <button @click="removerParticipante(participante)"
+                        class="text-red-500 hover:text-red-700 text-xs">
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formação de Duplas -->
+          <div v-if="participantes.length >= 4" class="border-t pt-6">
+            <h2 class="text-2xl font-bold mb-4">🤝 Formação de Duplas</h2>
+            
+            <!-- Botões de Ação -->
+            <div class="flex gap-3 mb-6">
+              <button @click="formarDuplasAleatorias" 
+                      class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2">
+                🎲 Formar Duplas Aleatórias
+              </button>
+              <button @click="mostrarFormacaoDuplas = !mostrarFormacaoDuplas" 
+                      class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                ✋ Formar Duplas Manualmente
+              </button>
+            </div>
+
+            <!-- Formação Manual -->
+            <div v-if="mostrarFormacaoDuplas && getParticipantesDisponiveis().length >= 2" 
+                 class="bg-blue-50 p-4 rounded-lg mb-6">
+              <h3 class="text-lg font-semibold mb-3">Formar Dupla Manualmente</h3>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-2">Jogador 1</label>
+                  <select v-model="dupla1Selecionada.jogador1" 
+                          class="w-full px-3 py-2 border rounded-lg">
+                    <option value="">Selecione...</option>
+                    <option v-for="p in getParticipantesDisponiveis()" :key="p" :value="p">
+                      {{ p }}
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-2">Jogador 2</label>
+                  <select v-model="dupla1Selecionada.jogador2" 
+                          class="w-full px-3 py-2 border rounded-lg">
+                    <option value="">Selecione...</option>
+                    <option v-for="p in getParticipantesDisponiveis().filter(p => p !== dupla1Selecionada.jogador1)" 
+                            :key="p" :value="p">
+                      {{ p }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <button @click="formarDuplaManual(dupla1Selecionada.jogador1, dupla1Selecionada.jogador2)"
+                      :disabled="!dupla1Selecionada.jogador1 || !dupla1Selecionada.jogador2"
+                      class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                Formar Dupla
+              </button>
+            </div>
+
+            <!-- Lista de Duplas Formadas -->
+            <div v-if="duplas.length > 0" class="space-y-3">
+              <h3 class="text-lg font-semibold">
+                Duplas Formadas ({{ duplas.length }})
+              </h3>
+              <div class="grid gap-3">
+                <div v-for="(dupla, index) in duplas" :key="dupla.id"
+                     class="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div class="flex items-center justify-between">
                     <div>
-                      <h4 class="font-semibold text-lg">{{ dupla.nome }}</h4>
-                      <div v-if="dupla.jogadores[0] || dupla.jogadores[1]" class="text-sm text-slate-600">
-                        <span v-if="dupla.jogadores[0]">{{ dupla.jogadores[0] }}</span>
-                        <span v-if="dupla.jogadores[0] && dupla.jogadores[1]"> • </span>
-                        <span v-if="dupla.jogadores[1]">{{ dupla.jogadores[1] }}</span>
+                      <span class="text-lg font-semibold">Dupla {{ index + 1 }}</span>
+                      <div class="text-sm text-slate-600 mt-1">
+                        {{ dupla.jogadores[0] }} & {{ dupla.jogadores[1] }}
                       </div>
                     </div>
-                  </div>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">#{{ index + 1 }}</span>
-                  <button @click="editarDupla(dupla)" 
-                          class="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
-                    ✏️
-                  </button>
-                  <button @click="removerDupla(dupla)" 
-                          class="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                    🗑️
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="text-xs text-slate-500 flex items-center gap-2">
-            <span>🔄</span>
-            <span>Arraste e solte para reordenar as duplas</span>
-          </div>
-        </div>
-
-        <!-- Formulário de Nova Dupla -->
-        <div v-show="mostrarFormularioDupla || duplas.length === 0" class="bg-white p-4 rounded-lg border">
-          <h3 class="text-lg font-semibold mb-4">
-            {{ duplaEditando ? '✏️ Editar Dupla' : '➕ Nova Dupla' }}
-          </h3>
-          
-          <form @submit.prevent="adicionarDupla" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-2">Nome da Dupla (opcional)</label>
-              <input v-model="formularioDupla.nome" 
-                     type="text" 
-                     class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                     placeholder="Ex: Os Campeões">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div class="relative">
-                <label class="block text-sm font-medium mb-2">Jogador 1 (opcional)</label>
-                <input v-model="formularioDupla.jogadores[0]" 
-                       @input="buscarSugestoesJogador($event.target.value, 1)"
-                       @focus="buscarSugestoesJogador($event.target.value, 1)"
-                       @blur="esconderSugestoesJ1"
-                       type="text" 
-                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                       placeholder="Ex: João"
-                       autocomplete="off">
-                
-                <!-- Sugestões Jogador 1 -->
-                <div v-if="mostrarSugestoesJ1 && sugestoesJogador1.length > 0" 
-                     class="absolute z-10 w-full bg-white border border-slate-200 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto">
-                  <div v-for="jogador in sugestoesJogador1.slice(0, 8)" 
-                       :key="jogador.nome"
-                       @click="formularioDupla.jogadores[0] = jogador.nome"
-                       class="px-3 py-2 hover:bg-slate-100 cursor-pointer text-sm border-b border-slate-100 last:border-b-0">
-                    {{ jogador.nome }}
-                  </div>
-                </div>
-              </div>
-              
-              <div class="relative">
-                <label class="block text-sm font-medium mb-2">Jogador 2 (opcional)</label>
-                <input v-model="formularioDupla.jogadores[1]" 
-                       @input="buscarSugestoesJogador($event.target.value, 2)"
-                       @focus="buscarSugestoesJogador($event.target.value, 2)"
-                       @blur="esconderSugestoesJ2"
-                       type="text" 
-                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                       placeholder="Ex: Maria"
-                       autocomplete="off">
-                
-                <!-- Sugestões Jogador 2 -->
-                <div v-if="mostrarSugestoesJ2 && sugestoesJogador2.length > 0" 
-                     class="absolute z-10 w-full bg-white border border-slate-200 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto">
-                  <div v-for="jogador in sugestoesJogador2.slice(0, 8)" 
-                       :key="jogador.nome"
-                       @click="formularioDupla.jogadores[1] = jogador.nome"
-                       class="px-3 py-2 hover:bg-slate-100 cursor-pointer text-sm border-b border-slate-100 last:border-b-0">
-                    {{ jogador.nome }}
+                    <button @click="removerDupla(dupla)"
+                            class="text-red-500 hover:text-red-700">
+                      🗑️
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="flex gap-3">
-              <button type="submit" 
-                      class="flex-1 bg-brand-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-brand-600 transition-colors">
-                {{ duplaEditando ? 'Salvar Alterações' : 'Adicionar Dupla' }}
-              </button>
-              <button v-if="duplaEditando" 
-                      type="button" 
-                      @click="cancelarEdicaoDupla"
-                      class="px-6 py-3 text-slate-600 border rounded-lg hover:bg-slate-50 transition-colors">
-                Cancelar
+            <!-- Gerar Bracket -->
+            <div v-if="duplas.length >= 2" class="mt-6">
+              <button @click="gerarBracket" 
+                      class="w-full px-6 py-4 bg-green-600 text-white text-lg font-semibold rounded-lg hover:bg-green-700 flex items-center justify-center gap-2">
+                🏆 Gerar Bracket do Torneio
               </button>
             </div>
-          </form>
-        </div>
+          </div>
 
-        <!-- Carregar Duplas Padrão -->
-        <div class="bg-white p-4 rounded-lg border">
-          <h3 class="text-lg font-semibold mb-4">⚡ Duplas Padrão</h3>
-          
-          <button @click="() => {}" 
-                  class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-600 transition-colors">
-            Carregar Duplas Padrão (6 duplas)
-          </button>
-          
-          <p class="text-xs text-slate-500 mt-2 text-center">
-            Carrega 6 duplas pré-definidas para começar rapidamente
-          </p>
-        </div>
-
-        <!-- Botão Próximo -->
-        <div v-if="duplas.length >= 2" class="pt-4 border-t">
-          <button @click="gerarBracket" 
-                  class="w-full bg-brand-500 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-brand-600 transition-colors">
-            🏆 Próximo: Gerar Bracket ({{ duplas.length }} duplas)
-          </button>
-        </div>
-        <div v-else class="pt-4 border-t">
-          <div class="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <p class="text-yellow-700 font-medium">⚠️ Mínimo de 2 duplas necessárias</p>
-            <p class="text-yellow-600 text-sm mt-1">
-              Cadastre {{ 2 - duplas.length }} dupla{{ (2 - duplas.length) > 1 ? 's' : '' }} para continuar
-            </p>
+          <!-- Mensagem quando não há participantes suficientes -->
+          <div v-else-if="participantes.length > 0" class="text-center py-8 text-slate-500">
+            <p>Adicione pelo menos 4 participantes para formar duplas</p>
+            <p class="text-sm mt-2">Participantes cadastrados: {{ participantes.length }}</p>
           </div>
         </div>
       </div>
-
-      <!-- Tela do Bracket -->
       <div v-else-if="currentRoute === 'bracket'" class="space-y-6">
         <!-- Header do Bracket -->
         <div class="bg-white p-4 rounded-lg border">

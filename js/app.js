@@ -33,14 +33,21 @@ createApp({
       }
     });
 
-    // Duplas e partidas
+    // Participantes e duplas
+    const participantes = ref([]);
+    const novoParticipante = ref('');
     const duplas = ref([]);
+    const mostrarFormacaoDuplas = ref(false);
+    const dupla1Selecionada = reactive({ jogador1: '', jogador2: '' });
+    const dupla2Selecionada = reactive({ jogador1: '', jogador2: '' });
+    
+    // Partidas e bracket
     const bracket = ref(null);
     const partidaAtual = ref(null);
     const proximasPartidas = ref([]);
     const bracketStats = ref(null);
 
-    // Formulário de dupla
+    // Formulário de dupla (mantido para compatibilidade)
     const mostrarFormularioDupla = ref(false);
     const duplaEditando = ref(null);
     const formularioDupla = reactive({
@@ -48,7 +55,7 @@ createApp({
       jogadores: ['', '']
     });
     
-    // Jogadores salvos (removido - não vamos usar mais localStorage)
+    // Variáveis legacy (mantidas para não quebrar)
     const jogadoresSalvos = ref([]);
     const sugestoesJogador1 = ref([]);
     const sugestoesJogador2 = ref([]);
@@ -156,6 +163,7 @@ createApp({
         }
         
         torneioAtual.value = torneio;
+        participantes.value = torneio.participantes || [];
         duplas.value = torneio.duplas || [];
         bracket.value = torneio.bracket || { rodadas: [] };
         
@@ -277,7 +285,120 @@ createApp({
       }
     }
 
-    // ===== DUPLAS =====
+    // ===== PARTICIPANTES =====
+    
+    async function adicionarParticipante() {
+      const nome = novoParticipante.value.trim();
+      if (!nome) {
+        mostrarToast('Digite o nome do participante', 'erro');
+        return;
+      }
+      
+      // Verificar se j\u00e1 existe
+      if (participantes.value.includes(nome)) {
+        mostrarToast('Participante j\u00e1 cadastrado', 'erro');
+        return;
+      }
+      
+      participantes.value.push(nome);
+      novoParticipante.value = '';
+      
+      // Salvar no torneio
+      if (torneioAtual.value) {
+        torneioAtual.value.participantes = [...participantes.value];
+        await salvarTorneioAtual();
+      }
+      
+      mostrarToast(`${nome} adicionado!`, 'sucesso');
+    }
+    
+    async function removerParticipante(nome) {
+      participantes.value = participantes.value.filter(p => p !== nome);
+      
+      if (torneioAtual.value) {
+        torneioAtual.value.participantes = [...participantes.value];
+        await salvarTorneioAtual();
+      }
+      
+      mostrarToast('Participante removido', 'sucesso');
+    }
+    
+    function formarDuplasAleatorias() {
+      if (participantes.value.length < 4) {
+        mostrarToast('Adicione pelo menos 4 participantes', 'erro');
+        return;
+      }
+      
+      if (participantes.value.length % 2 !== 0) {
+        mostrarToast('N\u00famero de participantes deve ser par', 'erro');
+        return;
+      }
+      
+      // Embaralhar participantes
+      const embaralhados = [...participantes.value].sort(() => Math.random() - 0.5);
+      
+      // Limpar duplas anteriores
+      duplas.value = [];
+      
+      // Formar duplas
+      for (let i = 0; i < embaralhados.length; i += 2) {
+        const dupla = {
+          id: `dupla_${Date.now()}_${i}`,
+          nome: `${embaralhados[i]} & ${embaralhados[i + 1]}`,
+          jogadores: [embaralhados[i], embaralhados[i + 1]],
+          pontos: 0
+        };
+        duplas.value.push(dupla);
+      }
+      
+      salvarTorneioAtual();
+      mostrarToast('Duplas formadas aleatoriamente!', 'sucesso');
+    }
+    
+    async function formarDuplaManual(jogador1, jogador2) {
+      if (!jogador1 || !jogador2) {
+        mostrarToast('Selecione dois jogadores', 'erro');
+        return;
+      }
+      
+      if (jogador1 === jogador2) {
+        mostrarToast('Selecione jogadores diferentes', 'erro');
+        return;
+      }
+      
+      // Verificar se jogadores j\u00e1 est\u00e3o em duplas
+      const jogadorEmDupla = duplas.value.some(d => 
+        d.jogadores.includes(jogador1) || d.jogadores.includes(jogador2)
+      );
+      
+      if (jogadorEmDupla) {
+        mostrarToast('Um dos jogadores j\u00e1 est\u00e1 em uma dupla', 'erro');
+        return;
+      }
+      
+      const dupla = {
+        id: `dupla_${Date.now()}`,
+        nome: `${jogador1} & ${jogador2}`,
+        jogadores: [jogador1, jogador2],
+        pontos: 0
+      };
+      
+      duplas.value.push(dupla);
+      await salvarTorneioAtual();
+      
+      mostrarToast('Dupla formada!', 'sucesso');
+      
+      // Limpar sele\u00e7\u00e3o
+      dupla1Selecionada.jogador1 = '';
+      dupla1Selecionada.jogador2 = '';
+    }
+    
+    function getParticipantesDisponiveis() {
+      const emDuplas = duplas.value.flatMap(d => d.jogadores);
+      return participantes.value.filter(p => !emDuplas.includes(p));
+    }
+
+    // ===== DUPLAS (mantido para compatibilidade) =====
 
     async function adicionarDupla() {
       if (!formularioDupla.nome.trim()) {
@@ -688,7 +809,12 @@ createApp({
       usuariosOnline,
       toast,
       novoTorneio,
+      participantes,
+      novoParticipante,
       duplas,
+      mostrarFormacaoDuplas,
+      dupla1Selecionada,
+      dupla2Selecionada,
       bracket,
       partidaAtual,
       proximasPartidas,
@@ -721,6 +847,13 @@ createApp({
       excluirTorneio,
       reiniciarTorneio,
       compartilharTorneio,
+      
+      // Métodos - Participantes
+      adicionarParticipante,
+      removerParticipante,
+      formarDuplasAleatorias,
+      formarDuplaManual,
+      getParticipantesDisponiveis,
       
       // Métodos - Duplas
       adicionarDupla,

@@ -402,10 +402,11 @@ function validarBracket(bracket) {
 }
 
 // Exportar funções para uso global
-window.bracketFunctions = {
+window.BracketSystem = {
   gerarBracket,
   avancarVencedor,
   obterProximasPartidas,
+  calcularEstatisticas: obterEstatisticasBracket, // Alias para compatibilidade
   obterEstatisticasBracket,
   buscarDuplaNoBracket,
   validarBracket,
@@ -413,4 +414,4 @@ window.bracketFunctions = {
   proximaPotenciaDe2
 };
 
-console.log('Bracket module loaded with functions:', Object.keys(window.bracketFunctions));
+console.log('BracketSystem loaded with functions:', Object.keys(window.BracketSystem));

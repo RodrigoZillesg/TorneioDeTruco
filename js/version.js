@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '2.1.1',
+  VERSION: '2.1.2',
   BUILD_DATE: '2025-01-31',
-  LAST_UPDATE: '16:30',
+  LAST_UPDATE: '16:45',
   
   // Changelog resumido
   CHANGES: {
+    '2.1.2': 'Correção: BracketSystem não carregado - ajustado nome da exportação',
     '2.1.1': 'Correções: Layout mobile, geração de bracket e remoção de texto de desenvolvimento',
     '2.1.0': 'Novo sistema: Cadastro de participantes individuais e formação de duplas',
     '2.0.1': 'Correções: Tela branca em duplas e funções faltantes',

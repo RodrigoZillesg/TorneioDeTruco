@@ -41,6 +41,9 @@ const clientesTorneio = new Map();
 // Arquivo para persistência de torneios
 const ARQUIVO_TORNEIOS = 'torneios-persistentes.json';
 
+// Cache de torneios persistidos
+let cacheTorneios = {};
+
 // Estrutura de um torneio ativo
 class TorneioAtivo {
   constructor(id) {
@@ -71,7 +74,7 @@ io.on('connection', (socket) => {
   console.log(`✅ Cliente conectado: ${socket.id}`);
 
   // Cliente entra em um torneio
-  socket.on('entrar-torneio', (torneioId) => {
+  socket.on('entrar-torneio', async (torneioId) => {
     console.log(`🎮 Cliente ${socket.id} entrando no torneio ${torneioId}`);
     
     // Sair de torneio anterior se estiver em algum
@@ -104,9 +107,25 @@ io.on('connection', (socket) => {
       timestamp: Date.now()
     });
 
+    // Carregar estado persistido se não houver em memória
+    if (!torneio.dados) {
+      try {
+        const dadosPersistidos = await carregarTorneioPersistente(torneioId);
+        if (dadosPersistidos) {
+          torneio.atualizarDados(dadosPersistidos);
+          console.log(`📁 Estado do torneio ${torneioId} recuperado do disco`);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar torneio persistido:', error);
+      }
+    }
+
     // Enviar estado atual do torneio se existir
     if (torneio.dados) {
       socket.emit('estado-inicial', torneio.dados);
+      console.log(`📊 Estado inicial enviado para cliente ${socket.id}`);
+    } else {
+      socket.emit('torneio-nao-encontrado', { torneioId });
     }
 
     // Enviar contagem de clientes
@@ -117,7 +136,7 @@ io.on('connection', (socket) => {
   });
 
   // Atualização de partida
-  socket.on('atualizar-partida', (dados) => {
+  socket.on('atualizar-partida', async (dados) => {
     const torneioId = clientesTorneio.get(socket.id);
     if (!torneioId) return;
 
@@ -127,6 +146,8 @@ io.on('connection', (socket) => {
     const torneio = torneiosAtivos.get(torneioId);
     if (torneio) {
       torneio.atualizarDados(dados);
+      // Persistir imediatamente
+      await salvarTorneioPersistente(torneioId, dados);
     }
 
     // Broadcast para todos no torneio exceto o remetente
@@ -138,7 +159,7 @@ io.on('connection', (socket) => {
   });
 
   // Atualização de bracket
-  socket.on('atualizar-bracket', (dados) => {
+  socket.on('atualizar-bracket', async (dados) => {
     const torneioId = clientesTorneio.get(socket.id);
     if (!torneioId) return;
 
@@ -148,6 +169,8 @@ io.on('connection', (socket) => {
     const torneio = torneiosAtivos.get(torneioId);
     if (torneio) {
       torneio.atualizarDados(dados);
+      // Persistir imediatamente
+      await salvarTorneioPersistente(torneioId, dados);
     }
 
     // Broadcast para todos no torneio exceto o remetente
@@ -159,7 +182,7 @@ io.on('connection', (socket) => {
   });
 
   // Atualização de torneio
-  socket.on('atualizar-torneio', (dados) => {
+  socket.on('atualizar-torneio', async (dados) => {
     const torneioId = clientesTorneio.get(socket.id);
     if (!torneioId) return;
 
@@ -169,6 +192,8 @@ io.on('connection', (socket) => {
     const torneio = torneiosAtivos.get(torneioId);
     if (torneio) {
       torneio.atualizarDados(dados);
+      // Persistir imediatamente
+      await salvarTorneioPersistente(torneioId, dados);
     }
 
     // Broadcast para todos no torneio exceto o remetente
@@ -243,8 +268,10 @@ setInterval(() => {
 async function carregarTorneisPersistentes() {
   try {
     const data = await fs.readFile(ARQUIVO_TORNEIOS, 'utf8');
-    return JSON.parse(data);
+    cacheTorneios = JSON.parse(data).torneios || {};
+    return { torneios: cacheTorneios };
   } catch (error) {
+    cacheTorneios = {};
     return { torneios: {} };
   }
 }
@@ -255,6 +282,43 @@ async function salvarTorneisPersistentes(dados) {
     return true;
   } catch (error) {
     console.error('Erro ao salvar torneios:', error);
+    return false;
+  }
+}
+
+// Carregar torneio específico persistido
+async function carregarTorneioPersistente(torneioId) {
+  try {
+    const dados = await carregarTorneisPersistentes();
+    return dados.torneios[torneioId] || null;
+  } catch (error) {
+    console.error('Erro ao carregar torneio persistido:', error);
+    return null;
+  }
+}
+
+// Salvar torneio específico
+async function salvarTorneioPersistente(torneioId, dadosTorneio) {
+  try {
+    const dados = await carregarTorneisPersistentes();
+    
+    // Atualizar torneio
+    dados.torneios[torneioId] = {
+      ...dadosTorneio,
+      id: torneioId,
+      modificadoEm: new Date().toISOString()
+    };
+    
+    // Salvar no arquivo
+    await salvarTorneisPersistentes(dados);
+    
+    // Atualizar cache
+    cacheTorneios[torneioId] = dados.torneios[torneioId];
+    
+    console.log(`💾 Torneio ${torneioId} persistido com sucesso`);
+    return true;
+  } catch (error) {
+    console.error('Erro ao salvar torneio:', error);
     return false;
   }
 }
@@ -365,12 +429,17 @@ app.delete('/api/torneios/:id', async (req, res) => {
 });
 
 // Iniciar servidor
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
+  // Carregar torneios persistidos na inicialização
+  await carregarTorneisPersistentes();
+  console.log(`📁 ${Object.keys(cacheTorneios).length} torneios carregados do disco`);
+  
   console.log(`
     🎮 Servidor Torneio de Truco rodando!
     📡 Porta: ${PORT}
     🌐 Local: http://localhost:${PORT}
     ⚡ WebSocket pronto para conexões
     📊 API Status: http://localhost:${PORT}/api/status
+    💾 Torneios persistidos: ${Object.keys(cacheTorneios).length}
   `);
 });

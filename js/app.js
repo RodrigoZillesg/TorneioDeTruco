@@ -125,8 +125,41 @@ createApp({
 
     async function carregarTorneiosSalvos() {
       try {
-        const torneios = await db.torneios.orderBy('criadoEm').reverse().toArray();
-        torneiosSalvos.value = torneios;
+        // Carregar torneios locais
+        const torneiosLocais = await db.torneios.orderBy('criadoEm').reverse().toArray();
+        
+        // Carregar torneios do servidor se disponível
+        let torneiosServidor = [];
+        if (window.ApiClient) {
+          try {
+            const response = await window.ApiClient.listar();
+            if (response.success) {
+              torneiosServidor = response.torneios || [];
+            }
+          } catch (error) {
+            console.warn('Não foi possível carregar torneios do servidor:', error);
+          }
+        }
+        
+        // Mesclar torneios (removendo duplicatas pelo ID)
+        const torneiosMap = new Map();
+        
+        // Adicionar torneios locais
+        torneiosLocais.forEach(t => torneiosMap.set(t.id, t));
+        
+        // Adicionar/atualizar com torneios do servidor
+        torneiosServidor.forEach(t => {
+          const local = torneiosMap.get(t.id);
+          if (!local || new Date(t.modificadoEm) > new Date(local.modificadoEm || 0)) {
+            torneiosMap.set(t.id, t);
+          }
+        });
+        
+        // Converter de volta para array e ordenar
+        torneiosSalvos.value = Array.from(torneiosMap.values())
+          .sort((a, b) => new Date(b.modificadoEm || b.criadoEm) - new Date(a.modificadoEm || a.criadoEm));
+          
+        console.log(`📁 ${torneiosSalvos.value.length} torneios carregados (${torneiosLocais.length} locais, ${torneiosServidor.length} servidor)`);
       } catch (error) {
         console.error('Erro ao carregar torneios:', error);
       }
@@ -149,11 +182,29 @@ createApp({
     }
 
     async function abrirTorneio(id) {
-      const torneio = await carregarTorneio(id);
+      // Primeiro tentar carregar do servidor se disponível
+      let torneio = null;
+      
+      if (window.SyncManager) {
+        // Inicializar SyncManager primeiro
+        await inicializarSyncMelhorado(id);
+        torneio = await window.SyncManager.carregarDoServidor();
+      }
+      
+      // Se não encontrou no servidor, carregar localmente
+      if (!torneio) {
+        torneio = await carregarTorneio(id);
+      }
+      
       if (torneio) {
-        // Inicializar sincronização para este torneio
-        inicializarSyncTorneio(id);
+        torneioAtual.value = torneio;
         
+        // Se não inicializou SyncManager ainda, fazer agora
+        if (!window.SyncManager || !window.SyncManager.estaConectado()) {
+          await inicializarSyncMelhorado(id);
+        }
+        
+        // Navegar para a tela apropriada
         if (torneio.status === 'configuracao' || !torneio.duplas?.length) {
           navigate('duplas');
         } else if (torneio.bracket?.rodadas?.length > 0) {
@@ -174,6 +225,7 @@ createApp({
         id: `tourn_${Date.now()}`,
         nome: novoTorneio.nome,
         criadoEm: new Date().toISOString(),
+        modificadoEm: new Date().toISOString(),
         regras: { ...novoTorneio.regras },
         duplas: [],
         bracket: { rodadas: [] },
@@ -182,8 +234,24 @@ createApp({
       };
 
       try {
+        // Salvar localmente
         await db.torneios.add(torneio);
         torneioAtual.value = torneio;
+        
+        // Salvar no servidor e inicializar sincronização
+        if (window.SyncManager) {
+          await window.SyncManager.inicializar(torneio.id, {
+            onEstadoInicial: (dados) => {
+              console.log('Torneio criado e sincronizado');
+            }
+          });
+          await window.SyncManager.enviarAtualizacao('torneio', torneio);
+        }
+        
+        // Salvar com PersistenceManager também
+        if (window.PersistenceManager) {
+          await window.PersistenceManager.salvar(torneio);
+        }
         
         Object.assign(novoTorneio, {
           nome: '',
@@ -622,6 +690,7 @@ createApp({
       
       try {
         torneioAtual.value.duplas = [...duplas.value];
+        torneioAtual.value.modificadoEm = new Date().toISOString();
         
         // Limpar objeto para evitar problemas de serialização
         const torneioLimpo = limparObjetoParaSerializacao(torneioAtual.value);
@@ -632,6 +701,11 @@ createApp({
           await db.torneios.put(torneioLimpo);
         } else {
           await db.torneios.add(torneioLimpo);
+        }
+        
+        // Sincronizar com servidor via SyncManager
+        if (window.SyncManager && window.SyncManager.estaConectado()) {
+          await window.SyncManager.enviarAtualizacao('torneio', torneioLimpo);
         }
         
         // Salvar com PersistenceManager para sincronização entre dispositivos
@@ -1109,7 +1183,67 @@ createApp({
       }
     }
 
-    // Inicializar sincronização para torneio
+    // Inicializar sincronização melhorada com SyncManager
+    async function inicializarSyncMelhorado(tournamentId) {
+      if (!window.SyncManager) {
+        console.warn('SyncManager não disponível, usando fallback');
+        inicializarSyncTorneio(tournamentId);
+        return;
+      }
+      
+      console.log('🚀 Inicializando SyncManager para torneio:', tournamentId);
+      
+      const callbacks = {
+        onEstadoInicial: (dados) => {
+          console.log('📊 Estado inicial recebido');
+          torneioAtual.value = dados;
+          carregarDuplas();
+          carregarBracket();
+        },
+        
+        onTorneioAtualizado: (dados) => {
+          console.log('🔄 Torneio atualizado');
+          torneioAtual.value = dados;
+          carregarDuplas();
+          carregarBracket();
+        },
+        
+        onBracketAtualizado: (dados) => {
+          console.log('🏆 Bracket atualizado');
+          if (dados.bracket) {
+            bracket.value = dados.bracket;
+            atualizarBracketStats();
+            atualizarProximasPartidas();
+          }
+        },
+        
+        onPartidaAtualizada: (dados) => {
+          console.log('⚡ Partida atualizada');
+          if (partidaAtual.value && dados.partidaId === partidaAtual.value.id) {
+            Object.assign(partidaAtual.value, dados);
+          }
+          carregarBracket();
+        },
+        
+        onClientesAtualizado: (dados) => {
+          clientesConectados.value = dados.total;
+          syncStatus.value = dados.total > 1 ? 'conectado' : 'desconectado';
+        },
+        
+        onConectar: () => {
+          syncStatus.value = 'conectado';
+          mostrarToast('Conexão estabelecida', 'sucesso');
+        },
+        
+        onDesconectar: () => {
+          syncStatus.value = 'desconectado';
+        }
+      };
+      
+      await window.SyncManager.inicializar(tournamentId, callbacks);
+    }
+    
+    // Manter função antiga para compatibilidade
     function inicializarSyncTorneio(tournamentId) {
       if (!window.syncFunctions) {
         console.warn('Módulo de sincronização não disponível');
@@ -1121,7 +1255,6 @@ createApp({
       const callbacks = {
         onTournamentUpdate: (dados) => {
           console.log('Recebida atualização do torneio');
-          // Recarregar torneio se mudou
           if (dados.timestamp > lastSyncTimestamp.value) {
             recarregarTorneioDoServidor(dados);
           }
@@ -1129,7 +1262,6 @@ createApp({
         
         onBracketUpdate: (dados) => {
           console.log('Recebida atualização do bracket');
-          // Atualizar bracket se mudou
           if (dados.timestamp > lastSyncTimestamp.value) {
             atualizarBracketLocal(dados);
           }
@@ -1137,7 +1269,6 @@ createApp({
         
         onMatchUpdate: (dados) => {
           console.log('Recebida atualização de partida');
-          // Atualizar partida se mudou
           if (dados.timestamp > lastSyncTimestamp.value) {
             atualizarPartidaLocal(dados);
           }
@@ -1157,9 +1288,8 @@ createApp({
       
       window.syncFunctions.inicializarSync(tournamentId, callbacks);
       
-      // Atualizar contador inicial e configurar timer
       atualizarContadorClientes();
-      setInterval(atualizarContadorClientes, 10000); // Atualizar a cada 10 segundos
+      setInterval(atualizarContadorClientes, 10000);
     }
 
     // Atualizar contador de clientes conectados

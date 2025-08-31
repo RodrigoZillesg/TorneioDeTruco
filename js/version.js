@@ -4,12 +4,14 @@
  */
 
 window.AppVersion = {
-  VERSION: '1.2.9',
-  BUILD_DATE: '2024-08-30',
-  LAST_UPDATE: '17:00',
+  VERSION: '1.3.0',
+  BUILD_DATE: '2024-08-31',
+  LAST_UPDATE: '10:55',
   
   // Changelog resumido
   CHANGES: {
+    '1.3.0': 'Sistema robusto de sincronização com SyncManager e persistência no servidor',
+    '1.2.9': 'Melhorias: Clareza do bracket e correção de sincronização',
     '1.2.8': 'URGENTE: Correção de erros JavaScript críticos',
     '1.2.7': 'Correções: Pontuação detalhada no bracket e botão remover tentos',
     '1.2.6': 'Melhorias: Sincronização em tempo real e interface do bracket',

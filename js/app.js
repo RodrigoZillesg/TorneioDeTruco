@@ -47,6 +47,13 @@ createApp({
       nome: '',
       jogadores: ['', '']
     });
+    
+    // Jogadores salvos (removido - não vamos usar mais localStorage)
+    const jogadoresSalvos = ref([]);
+    const sugestoesJogador1 = ref([]);
+    const sugestoesJogador2 = ref([]);
+    const mostrarSugestoesJ1 = ref(false);
+    const mostrarSugestoesJ2 = ref(false);
 
     // Computed properties
     const pageTitle = computed(() => {
@@ -347,7 +354,12 @@ createApp({
     function atualizarBracketStats() {
       if (!bracket.value) return;
       
-      bracketStats.value = window.BracketSystem.calcularEstatisticas(bracket.value);
+      // Verificar se a função existe
+      if (window.BracketSystem && window.BracketSystem.calcularEstatisticas) {
+        bracketStats.value = window.BracketSystem.calcularEstatisticas(bracket.value);
+      } else if (window.BracketSystem && window.BracketSystem.obterEstatisticasBracket) {
+        bracketStats.value = window.BracketSystem.obterEstatisticasBracket(bracket.value);
+      }
     }
 
     function atualizarProximasPartidas() {
@@ -520,6 +532,151 @@ createApp({
       }
     });
 
+    // Funções auxiliares que faltavam
+    function editarDupla(dupla) {
+      duplaEditando.value = dupla;
+      formularioDupla.nome = dupla.nome;
+      formularioDupla.jogadores = [...dupla.jogadores];
+      mostrarFormularioDupla.value = true;
+    }
+
+    function cancelarEdicaoDupla() {
+      duplaEditando.value = null;
+      formularioDupla.nome = '';
+      formularioDupla.jogadores = ['', ''];
+      mostrarFormularioDupla.value = false;
+    }
+
+    function ordenarDuplas() {
+      // Função vazia por enquanto - ordenação manual removida
+    }
+
+    async function adicionarPontoMao(dupla) {
+      if (!partidaAtual.value) return;
+      
+      const pontuacao = partidaAtual.value.pontuacao;
+      const lado = partidaAtual.value.duplaA?.id === dupla.id ? 'duplaA' : 'duplaB';
+      
+      if (!pontuacao[lado]) {
+        pontuacao[lado] = { maos: [], pontosTotais: 0 };
+      }
+      
+      pontuacao[lado].maos.push(1);
+      pontuacao[lado].pontosTotais = pontuacao[lado].maos.reduce((a, b) => a + b, 0);
+      
+      await salvarTorneioAtual();
+    }
+
+    async function removerPontoMao(dupla) {
+      if (!partidaAtual.value) return;
+      
+      const pontuacao = partidaAtual.value.pontuacao;
+      const lado = partidaAtual.value.duplaA?.id === dupla.id ? 'duplaA' : 'duplaB';
+      
+      if (pontuacao[lado]?.maos?.length > 0) {
+        pontuacao[lado].maos.pop();
+        pontuacao[lado].pontosTotais = pontuacao[lado].maos.reduce((a, b) => a + b, 0);
+        await salvarTorneioAtual();
+      }
+    }
+
+    async function adicionarTento(dupla, valor) {
+      if (!partidaAtual.value) return;
+      
+      const pontuacao = partidaAtual.value.pontuacao;
+      const lado = partidaAtual.value.duplaA?.id === dupla.id ? 'duplaA' : 'duplaB';
+      
+      if (!pontuacao[lado]) {
+        pontuacao[lado] = { maos: [], pontosTotais: 0 };
+      }
+      
+      pontuacao[lado].maos.push(valor);
+      pontuacao[lado].pontosTotais = pontuacao[lado].maos.reduce((a, b) => a + b, 0);
+      
+      await salvarTorneioAtual();
+    }
+
+    async function removerUltimoTento(dupla) {
+      if (!partidaAtual.value) return;
+      
+      const pontuacao = partidaAtual.value.pontuacao;
+      const lado = partidaAtual.value.duplaA?.id === dupla.id ? 'duplaA' : 'duplaB';
+      
+      if (pontuacao[lado]?.maos?.length > 0) {
+        pontuacao[lado].maos.pop();
+        pontuacao[lado].pontosTotais = pontuacao[lado].maos.reduce((a, b) => a + b, 0);
+        await salvarTorneioAtual();
+      }
+    }
+
+    function voltarPartida() {
+      partidaAtual.value = null;
+      navigate('bracket');
+    }
+
+    async function reiniciarTorneio(torneioId) {
+      if (!confirm('Tem certeza que deseja reiniciar este torneio? Todas as partidas serão zeradas.')) {
+        return;
+      }
+      
+      try {
+        const torneio = await window.OnlineManager.carregarTorneio(torneioId);
+        if (!torneio) {
+          mostrarToast('Torneio não encontrado', 'erro');
+          return;
+        }
+        
+        torneio.bracket = { rodadas: [] };
+        torneio.campeao = null;
+        torneio.status = 'configuracao';
+        
+        await window.OnlineManager.atualizarTorneio(torneioId, torneio);
+        await carregarTorneiosSalvos();
+        
+        mostrarToast('Torneio reiniciado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao reiniciar torneio:', error);
+        mostrarToast('Erro ao reiniciar torneio', 'erro');
+      }
+    }
+
+    function compartilharTorneio() {
+      if (!torneioAtual.value) return;
+      
+      const url = `${window.location.origin}/#torneio/${torneioAtual.value.id}`;
+      
+      if (navigator.share) {
+        navigator.share({
+          title: torneioAtual.value.nome,
+          text: `Acompanhe o torneio ${torneioAtual.value.nome}`,
+          url: url
+        });
+      } else {
+        navigator.clipboard.writeText(url);
+        mostrarToast('Link copiado!', 'sucesso');
+      }
+    }
+
+    const canGoBack = computed(() => {
+      return currentRoute.value !== 'home';
+    });
+
+    const mainClass = computed(() => {
+      return showTabBar.value ? 'pb-20' : '';
+    });
+
+    // Polling para atualizar torneios automaticamente
+    setInterval(async () => {
+      if (statusConexao.value === 'online' && currentRoute.value === 'home') {
+        const torneios = await window.OnlineManager.listarTorneios();
+        if (torneios.length !== torneiosSalvos.value.length) {
+          torneiosSalvos.value = torneios.sort((a, b) => 
+            new Date(b.modificadoEm || b.criadoEm) - new Date(a.modificadoEm || a.criadoEm)
+          );
+        }
+      }
+    }, 5000); // Atualiza a cada 5 segundos
+
     // Retornar API pública
     return {
       // Estado
@@ -539,29 +696,56 @@ createApp({
       mostrarFormularioDupla,
       duplaEditando,
       formularioDupla,
+      jogadoresSalvos,
+      sugestoesJogador1,
+      sugestoesJogador2,
+      mostrarSugestoesJ1,
+      mostrarSugestoesJ2,
       
       // Computed
       pageTitle,
       showTabBar,
       bracketDisponivel,
       appVersion,
+      canGoBack,
+      mainClass,
       
-      // Métodos
+      // Métodos - Navegação
       navigate,
       goBack,
-      mostrarToast,
+      
+      // Métodos - Torneios
       carregarTorneiosSalvos,
       abrirTorneio,
       criarTorneio,
       excluirTorneio,
+      reiniciarTorneio,
+      compartilharTorneio,
+      
+      // Métodos - Duplas
       adicionarDupla,
+      editarDupla,
       removerDupla,
+      cancelarEdicaoDupla,
+      ordenarDuplas,
+      
+      // Métodos - Bracket
       gerarBracket,
+      
+      // Métodos - Partidas
       iniciarPartida,
       finalizarPartida,
+      voltarPartida,
+      adicionarPontoMao,
+      removerPontoMao,
+      adicionarTento,
+      removerUltimoTento,
+      
+      // Métodos - Usuário
       salvarUsuarioLocal,
       
-      // Utilidades
+      // Métodos - Utilidades
+      mostrarToast,
       formatarData: (date) => dayjs(date).format('DD/MM/YYYY HH:mm')
     };
   }

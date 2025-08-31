@@ -208,14 +208,14 @@
             <h2 class="text-2xl font-bold mb-4">🤝 Formação de Duplas</h2>
             
             <!-- Botões de Ação -->
-            <div class="flex gap-3 mb-6">
+            <div class="flex flex-col sm:flex-row gap-3 mb-6">
               <button @click="formarDuplasAleatorias" 
-                      class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2">
-                🎲 Formar Duplas Aleatórias
+                      class="flex-1 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2 text-sm sm:text-base">
+                🎲 Formar Aleatórias
               </button>
               <button @click="mostrarFormacaoDuplas = !mostrarFormacaoDuplas" 
-                      class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
-                ✋ Formar Duplas Manualmente
+                      class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 text-sm sm:text-base">
+                ✋ Formar Manualmente
               </button>
             </div>
 
@@ -998,10 +998,6 @@
         </div>
       </div>
 
-      <!-- Outras telas serão implementadas -->
-      <div v-else class="text-center py-12">
-        <p class="text-slate-600">Tela em desenvolvimento...</p>
-      </div>
     </main>
 
     <!-- Toast para mensagens -->

@@ -448,6 +448,8 @@ createApp({
     // ===== BRACKET =====
 
     async function gerarBracket() {
+      console.log('Gerando bracket com duplas:', duplas.value);
+      
       if (duplas.value.length < 2) {
         mostrarToast('Adicione pelo menos 2 duplas', 'erro');
         return;
@@ -459,17 +461,35 @@ createApp({
         }
       }
 
-      bracket.value = window.BracketSystem.gerarBracket(
-        duplas.value,
-        torneioAtual.value.regras
-      );
-      
-      await salvarTorneioAtual();
-      
-      atualizarBracketStats();
-      atualizarProximasPartidas();
-      
-      mostrarToast('Bracket gerado com sucesso!');
+      try {
+        // Verificar se BracketSystem existe
+        if (!window.BracketSystem || !window.BracketSystem.gerarBracket) {
+          console.error('BracketSystem não encontrado');
+          mostrarToast('Erro: Sistema de bracket não carregado', 'erro');
+          return;
+        }
+        
+        bracket.value = window.BracketSystem.gerarBracket(
+          duplas.value,
+          torneioAtual.value?.regras || { formato: 'eliminatoria_simples', melhorDe: 3 }
+        );
+        
+        console.log('Bracket gerado:', bracket.value);
+        
+        // Salvar e navegar
+        await salvarTorneioAtual();
+        
+        atualizarBracketStats();
+        atualizarProximasPartidas();
+        
+        mostrarToast('Bracket gerado com sucesso!');
+        
+        // Navegar para a tela do bracket
+        navigate('bracket');
+      } catch (error) {
+        console.error('Erro ao gerar bracket:', error);
+        mostrarToast('Erro ao gerar bracket: ' + error.message, 'erro');
+      }
     }
 
     function atualizarBracketStats() {

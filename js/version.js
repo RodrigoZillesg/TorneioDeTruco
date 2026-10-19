@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '2.3.0',
-  BUILD_DATE: '2026-10-19',
-  LAST_UPDATE: '23:55',
+  VERSION: '2.3.1',
+  BUILD_DATE: '2026-10-20',
+  LAST_UPDATE: '00:30',
   
   // Changelog resumido
   CHANGES: {
+    '2.3.1': 'Correção: cartas sem naipes sobrepostos e anúncio de truco legível',
     '2.3.0': 'Novo: Truco online hospedado no WordPress (plugin com relay, sem servidor Node)',
     '2.2.0': 'Novo: Jogo de Truco Paulista em /jogo (contra a IA ou online com amigos, com efeitos visuais e sonoros)',
     '2.1.2': 'Correção: BracketSystem não carregado - ajustado nome da exportação',

@@ -327,7 +327,7 @@
       <h3>Força das cartas</h3>
       <div class="ordem-cartas">${ordem}</div>
       <p>As <b>manilhas</b> são as cartas logo acima da vira (se a vira for 7, a manilha é a Dama). Elas vencem todas as outras, na ordem:
-      <b>♦ Pica-fumo</b> ‹ <b>♠ Espadilha</b> ‹ <b>♥ Copas</b> ‹ <b>♣ Zap</b>.</p>
+      <b>${Cartas.SIMBOLO.o} Pica-fumo</b> ‹ <b>${Cartas.SIMBOLO.e} Espadilha</b> ‹ <b>${Cartas.SIMBOLO.c} Copas</b> ‹ <b>${Cartas.SIMBOLO.p} Zap</b>.</p>
       <h3>A mão</h3>
       <ul>
         <li>Cada mão tem até 3 <b>vazas</b> (rodadas). Ganha quem vencer 2.</li>

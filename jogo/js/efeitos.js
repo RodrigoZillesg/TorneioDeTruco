@@ -146,20 +146,46 @@ window.Efeitos = (function () {
     explodir(x, y, { tipo: 'naipe', textos: ['♠', '♥', '♦', '♣'], cores: ['#ffd65c', '#ff5a5a', '#ffffff', '#ffd65c'], qtd: 18, vel: 8, tam: 26, vida: 70, gravidade: 0.15 });
   }
 
-  // Texto gigante animado no centro da tela
+  // Texto gigante animado no centro da tela (anima o bloco inteiro, sem letras soltas)
   function textoGrande(texto, classes, duracao) {
     const alvo = document.getElementById('fx-texto');
+    alvo.querySelectorAll('.texto-grande').forEach(e => e.remove());
     const el = document.createElement('div');
     el.className = 'texto-grande ' + (classes || '');
-    [...texto].forEach((letra, i) => {
-      const s = document.createElement('span');
-      s.textContent = letra === ' ' ? ' ' : letra;
-      s.style.animationDelay = (i * 0.04) + 's';
-      el.appendChild(s);
-    });
-    if (duracao) el.style.animationDuration = duracao + 'ms';
+    el.textContent = texto;
+    el.style.animationDuration = (duracao || 1600) + 'ms';
     alvo.appendChild(el);
-    setTimeout(() => el.remove(), duracao || 1700);
+    setTimeout(() => el.remove(), duracao || 1600);
+  }
+
+  // Anúncio de aposta: quem pediu, o nome da aposta e quanto passa a valer
+  function anuncio(o) {
+    let el = document.getElementById('anuncio');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'anuncio';
+      el.innerHTML = '<div class="anuncio-faixa"><div class="anuncio-quem"><span class="anuncio-av"></span><span class="anuncio-nome"></span></div>' +
+        '<div class="anuncio-titulo"></div><div class="anuncio-sub"></div></div>';
+      document.body.appendChild(el);
+    }
+    document.getElementById('fx-texto').querySelectorAll('.texto-grande').forEach(e => e.remove());
+    el.querySelector('.anuncio-av').textContent = o.avatar || '';
+    el.querySelector('.anuncio-nome').textContent = o.quem || '';
+    el.querySelector('.anuncio-titulo').textContent = o.titulo || '';
+    el.querySelector('.anuncio-sub').textContent = o.subtitulo || '';
+    el.className = 'nivel-' + (o.nivel || 1) + ' ' + (o.equipe || '');
+    el.style.setProperty('--duracao', (o.duracao || 1700) + 'ms');
+    void el.offsetWidth;
+    el.classList.add('ativo');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('ativo'), o.duracao || 1700);
+    const r = el.querySelector('.anuncio-titulo').getBoundingClientRect();
+    setTimeout(() => {
+      const cx = innerWidth / 2;
+      const cy = r.top + r.height / 2 || innerHeight / 2;
+      explodir(cx - r.width * 0.45, cy, { qtd: 22, vel: 7, cores: ['#ff4d00', '#ffd65c', '#ff9d2e'] });
+      explodir(cx + r.width * 0.45, cy, { qtd: 22, vel: 7, cores: ['#ff4d00', '#ffd65c', '#ff9d2e'] });
+    }, 180);
   }
 
   function tremer(elemento, nivel) {
@@ -241,5 +267,5 @@ window.Efeitos = (function () {
   fundo.iniciar();
   redimensionar();
 
-  return { explodir, confete, fogos, chuvaMoedas, naipes, textoGrande, tremer, flash, pontosVoando, reduzido };
+  return { explodir, confete, fogos, chuvaMoedas, naipes, textoGrande, anuncio, tremer, flash, pontosVoando, reduzido };
 })();

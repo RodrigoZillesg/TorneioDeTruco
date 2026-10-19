@@ -4,31 +4,22 @@
 window.Cartas = (function () {
   'use strict';
 
-  const SIMBOLO = { o: '♦', e: '♠', c: '♥', p: '♣' };
-  const FIGURAS = { K: '♚', Q: '♛', J: '♞' };
-  // Posições dos naipes (em % da área central) para cada valor numérico
-  const PIPS = {
-    2: [[50, 0], [50, 100, 1]],
-    3: [[50, 0], [50, 50], [50, 100, 1]],
-    4: [[0, 0], [100, 0], [0, 100, 1], [100, 100, 1]],
-    5: [[0, 0], [100, 0], [50, 50], [0, 100, 1], [100, 100, 1]],
-    6: [[0, 0], [100, 0], [0, 50], [100, 50], [0, 100, 1], [100, 100, 1]],
-    7: [[0, 0], [100, 0], [50, 25], [0, 50], [100, 50], [0, 100, 1], [100, 100, 1]]
-  };
+  // \uFE0E força o símbolo de texto (sem ele, o iPad/iPhone mostra emoji colorido)
+  const SIMBOLO = { o: '♦\uFE0E', e: '♠\uFE0E', c: '♥\uFE0E', p: '♣\uFE0E' };
+  const FIGURAS = { K: '♚\uFE0E', Q: '♛\uFE0E', J: '♞\uFE0E' };
 
   function vermelha(naipe) { return naipe === 'o' || naipe === 'c'; }
 
+  // Face limpa: índice nos cantos e um único símbolo grande no centro,
+  // sem nada se sobrepondo ao número ou à letra
   function preencherFrente(frente, carta) {
     const s = SIMBOLO[carta.naipe];
     frente.className = 'face frente' + (vermelha(carta.naipe) ? ' vermelha' : '');
     let centro;
     if (FIGURAS[carta.valor]) {
-      centro = `<div class="figura"><span class="rei">${FIGURAS[carta.valor]}</span><span class="letra">${s}</span></div>`;
-    } else if (carta.valor === 'A') {
-      centro = `<div class="pips"><span class="pip as" style="left:50%;top:50%">${s}</span></div>`;
+      centro = `<div class="figura"><span class="rei">${FIGURAS[carta.valor]}</span><span class="naipe-fig">${s}</span></div>`;
     } else {
-      centro = '<div class="pips">' + PIPS[carta.valor].map(([x, y, inv]) =>
-        `<span class="pip${inv ? ' inv' : ''}" style="left:${x}%;top:${y}%">${s}</span>`).join('') + '</div>';
+      centro = `<div class="centro-carta"><span class="naipe-grande${carta.valor === 'A' ? ' as' : ''}">${s}</span></div>`;
     }
     frente.innerHTML =
       `<div class="canto sup"><span class="v">${carta.valor}</span><span class="n">${s}</span></div>` +

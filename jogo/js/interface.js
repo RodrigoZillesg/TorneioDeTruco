@@ -329,7 +329,7 @@ window.Interface = (function () {
       const d = document.createElement('div');
       d.className = 'jogador equipe-' + (s % 2 === v.minhaEquipe ? 0 : 1);
       d.innerHTML = '<div class="avatar"><span class="emoji"></span><div class="anel"></div><span class="selo oculto">D</span></div>' +
-        '<div class="nome"></div><div class="balao"></div><div class="carimbo"></div>';
+        '<div class="nome"></div><div class="balao"></div>';
       el.jogadores.appendChild(d);
       return d;
     });
@@ -366,25 +366,27 @@ window.Interface = (function () {
     });
   }
 
-  function mostrarFala(assento, texto, dica) {
+  // Balão de fala do jogador; com "titulo", vira um balão de resposta (Desce!, Correu!...)
+  function mostrarFala(assento, texto, opcoes) {
     const d = infos[assento];
     if (!d) return;
+    opcoes = opcoes || {};
     const b = d.querySelector('.balao');
-    b.textContent = texto;
-    b.classList.toggle('dica', !!dica);
+    b.className = 'balao' + (opcoes.dica ? ' dica' : '') + (opcoes.tipo ? ' ' + opcoes.tipo : '');
+    b.innerHTML = (opcoes.titulo ? `<b class="balao-titulo">${escapar(opcoes.titulo)}</b>` : '') + (texto ? `<span>${escapar(texto)}</span>` : '');
+    void b.offsetWidth;
     b.classList.add('visivel');
     clearTimeout(b._timer);
-    b._timer = setTimeout(() => b.classList.remove('visivel'), dica ? 4200 : 2800);
+    b._timer = setTimeout(() => b.classList.remove('visivel'), opcoes.dica ? 4200 : 2800);
   }
 
-  function carimbar(assento, texto, tipo) {
-    const d = infos[assento];
-    if (!d) return;
-    const c = d.querySelector('.carimbo');
-    c.textContent = texto;
-    c.className = 'carimbo ' + tipo;
-    void c.offsetWidth;
-    c.classList.add('mostra');
+  // Resposta a uma aposta: um único balão com o título e a frase do jogador
+  function mostrarResposta(assento, titulo, tipo, fala) {
+    mostrarFala(assento, fala ? fala.texto : '', { titulo, tipo });
+    if (fala) {
+      fala.usada = true;
+      if (fala.voz) Som.falar(fala.texto, perfilVoz(assento));
+    }
   }
 
   function perfilVoz(assento) {
@@ -624,6 +626,9 @@ window.Interface = (function () {
       desenhar(v, { segurarVaza: fimVaza ? fimVaza.vaza : undefined });
     }
 
+    // Frase que acompanha uma resposta do mesmo jogador (vai no mesmo balão)
+    const falaDe = (assento) => eventos.find(f => f.tipo === 'fala' && f.assento === assento && !f.dica && !f.usada);
+
     for (const e of eventos) {
       switch (e.tipo) {
         case 'jogada': {
@@ -653,7 +658,7 @@ window.Interface = (function () {
             Som.tocar(nossa ? 'ganharVaza' : 'perderVaza', manilha);
             Efeitos.explodir(c.x, c.y, { qtd: manilha ? 60 : 30, vel: manilha ? 8 : 5, cores: nossa ? ['#38c3ff', '#bfeaff', '#ffd65c'] : ['#ff5a5a', '#ffc4c4', '#ffd65c'] });
             if (manilha && venc.carta.naipe === 'p') {
-              Efeitos.textoGrande('ZAP!', 'aposta nivel-2 medio', 1300);
+              Efeitos.textoGrande('ZAP!', 'fogo medio', 1300);
               Efeitos.tremer(el.mesa, 1);
             }
           }
@@ -664,34 +669,42 @@ window.Interface = (function () {
         }
         case 'aposta': {
           const nivel = M.ESCADA_APOSTA.indexOf(e.valor);
-          Efeitos.textoGrande(e.nome + '!', 'aposta nivel-' + nivel, 1500 + nivel * 120);
+          const j = v.jogadores[e.assento];
+          const duracao = 1700 + nivel * 150;
+          const eu = e.assento === v.meuAssento;
+          Efeitos.anuncio({
+            avatar: j.avatar,
+            quem: eu ? 'Você pediu' : j.nome + ' pediu',
+            titulo: e.nome + '!',
+            subtitulo: 'A mão passa a valer ' + e.valor + ' pontos',
+            nivel,
+            equipe: e.assento % 2 === v.minhaEquipe ? 'nos' : 'eles',
+            duracao
+          });
           Efeitos.tremer(el.mesa, nivel);
-          Efeitos.flash(['', 'rgba(255,140,0,.35)', 'rgba(255,60,0,.4)', 'rgba(255,0,60,.45)', 'rgba(170,60,255,.5)'][nivel]);
-          const c = centroDoAssento(e.assento);
-          Efeitos.explodir(c.x, c.y, { qtd: 30 + nivel * 15, vel: 6 + nivel, cores: ['#ff4d00', '#ffd65c', '#ff9d2e'] });
+          Efeitos.flash(['', 'rgba(255,140,0,.3)', 'rgba(255,60,0,.35)', 'rgba(255,0,60,.4)', 'rgba(170,60,255,.45)'][nivel]);
           Som.tocar('truco', nivel);
           Som.abafarMusica(2);
           Som.vibrar([80, 40, 80 + nivel * 40]);
           Som.falar(e.nome.charAt(0) + e.nome.slice(1).toLowerCase() + '!', Object.assign(perfilVoz(e.assento), { urgente: true, velocidade: 1.1 }));
-          mostrarFala(e.assento, e.nome + '!');
-          await espera(1300);
+          await espera(duracao);
           break;
         }
         case 'resposta': {
-          if (e.resposta === 'aceitar') { carimbar(e.assento, 'DESCE!', 'aceito'); Som.tocar('aceitar'); }
-          else if (e.resposta === 'correr') { carimbar(e.assento, 'CORREU!', 'correu'); Som.tocar('correr'); }
-          else carimbar(e.assento, 'AUMENTOU!', 'aumentou');
-          await espera(e.resposta === 'aumentar' ? 300 : 700);
+          if (e.resposta === 'aceitar') { mostrarResposta(e.assento, '✔ Aceitou', 'aceito', falaDe(e.assento)); Som.tocar('aceitar'); }
+          else if (e.resposta === 'correr') { mostrarResposta(e.assento, '✖ Correu', 'correu', falaDe(e.assento)); Som.tocar('correr'); }
+          await espera(e.resposta === 'aumentar' ? 100 : 900);
           break;
         }
         case 'onze': {
-          if (e.decisao === 'jogar') carimbar(e.assento, 'VAMOS!', 'aceito');
-          else { carimbar(e.assento, 'CORREU!', 'correu'); Som.tocar('correr'); }
+          if (e.decisao === 'jogar') mostrarResposta(e.assento, '✔ Vai jogar', 'aceito', falaDe(e.assento));
+          else { mostrarResposta(e.assento, '✖ Correu', 'correu', falaDe(e.assento)); Som.tocar('correr'); }
           await espera(700);
           break;
         }
         case 'fala':
-          mostrarFala(e.assento, e.texto, e.dica);
+          if (e.usada) break;
+          mostrarFala(e.assento, e.texto, { dica: e.dica });
           Som.tocar('pop');
           if (e.voz) Som.falar(e.texto, perfilVoz(e.assento));
           break;

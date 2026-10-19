@@ -198,6 +198,32 @@ teste('mesa com bots joga sozinha até o fim (tempos zerados)', () => {
   }
 });
 
+teste('sala: entrada, reconexão, bots e início da partida', () => {
+  const Sala = require('../compartilhado/sala');
+  const enviados = [];
+  const original = global.setTimeout;
+  global.setTimeout = () => 0;
+  try {
+    const sala = new Sala({ codigo: 'ABCD', hostToken: 'h', numJogadores: 4, dificuldade: 'facil', enviar: (t, ev, d) => enviados.push([t, ev, d]) });
+    assert(sala.entrar('h', { nome: 'Ana' }).ok);
+    assert(sala.entrar('g', { nome: '<b>Beto</b>' }).ok);
+    assert.strictEqual(sala.assentos[1].nome, 'bBeto/b');
+    assert(!sala.iniciar('g').ok, 'só o anfitrião inicia');
+    sala.alterarBot('h', 2, true);
+    assert(sala.assentos[2].bot);
+    assert(sala.iniciar('h').ok);
+    assert(sala.assentos[3].bot, 'lugar vazio vira bot');
+    assert(!sala.entrar('novo', {}).ok, 'não entra com a partida em andamento');
+    sala.desconectou('g');
+    assert.strictEqual(sala.assentos[1].conectado, false);
+    assert(sala.entrar('g', {}).ok, 'reconexão');
+    assert(enviados.some(([t, ev]) => t === 'g' && ev === 'estado'));
+    sala.encerrar();
+  } finally {
+    global.setTimeout = original;
+  }
+});
+
 if (falhas) {
   console.error('\n' + falhas + ' teste(s) falharam');
   process.exit(1);

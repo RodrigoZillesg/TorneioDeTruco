@@ -32,3 +32,6 @@ npm-debug.log*
 
 # Test files
 teste-*.html
+# Pacote do plugin WordPress
+wordpress/truco-online.zip
+wordpress/build/

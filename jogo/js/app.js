@@ -25,7 +25,8 @@
     try { localStorage.setItem(CHAVE, JSON.stringify(perfil)); } catch (e) { /* sem armazenamento */ }
   }
 
-  const cliente = new Conexoes.ClienteOnline();
+  // Com servidor Node usa Socket.IO; hospedado no WordPress usa o relay.php
+  const cliente = window.TRUCO_RELAY ? new Conexoes.ClienteRelay(window.TRUCO_RELAY) : new Conexoes.ClienteOnline();
   let conexaoOnline = null;
 
   // ---------- Telas ----------
@@ -90,7 +91,7 @@
         sel.querySelectorAll('button').forEach(x => x.classList.toggle('ativo', x === b));
         Som.tocar('clique');
         if (grupo === 'dificuldadeSala') {
-          cliente.socket && cliente.socket.emit('configurar', { dificuldade: b.dataset.valor });
+          cliente.enviar('configurar', { dificuldade: b.dataset.valor });
           return;
         }
         perfil[grupo] = b.dataset.valor;
@@ -146,7 +147,8 @@
   let onlinePronto = null;
   function prepararOnline() {
     if (!onlinePronto) {
-      onlinePronto = carregarSocketIO().then(ok => {
+      const pronto = window.TRUCO_RELAY ? Promise.resolve(true) : carregarSocketIO();
+      onlinePronto = pronto.then(ok => {
         if (!ok) {
           $('online-status').textContent = 'Modo online indisponível neste servidor (rode com "npm start").';
           return false;
@@ -210,7 +212,7 @@
     adicionarChat('Sala criada! Chame a galera com o código ou o link.', true);
     const link = linkSala(codigo);
     $('btn-whats').href = 'https://wa.me/?text=' + encodeURIComponent('Bora jogar truco? Entra na minha sala: ' + link);
-    history.replaceState(null, '', '?sala=' + codigo);
+    history.replaceState(null, '', location.pathname + '?sala=' + codigo);
     if (!cliente.sala || cliente.sala.estado !== 'jogo') mostrarTela('tela-sala');
   }
 
@@ -236,11 +238,11 @@
             acoes.className = 'acoes-assento';
             const b = document.createElement('button');
             b.textContent = '🤖 Bot';
-            b.onclick = (ev) => { ev.stopPropagation(); cliente.socket.emit('bot', { assento: i, adicionar: true }); };
+            b.onclick = (ev) => { ev.stopPropagation(); cliente.enviar('bot', { assento: i, adicionar: true }); };
             acoes.appendChild(b);
             d.appendChild(acoes);
           }
-          d.onclick = () => cliente.socket.emit('assento', { assento: i });
+          d.onclick = () => cliente.enviar('assento', { assento: i });
         } else {
           d.className = 'assento' + (i === sala.meuAssento ? ' eu' : '') + (a.conectado ? '' : ' offline');
           d.innerHTML = `<span class="av">${escapar(a.avatar)}</span><span class="nome">${escapar(a.nome)}</span>` +
@@ -253,7 +255,7 @@
             b.style.color = 'inherit';
             b.textContent = '✕';
             b.title = 'Remover';
-            b.onclick = () => cliente.socket.emit('bot', { assento: i, adicionar: false });
+            b.onclick = () => cliente.enviar('bot', { assento: i, adicionar: false });
             d.appendChild(b);
           }
         }
@@ -289,8 +291,8 @@
     e.preventDefault();
     const inp = $('chat-inp');
     const texto = inp.value.trim();
-    if (!texto || !cliente.socket) return;
-    cliente.socket.emit('falar', { texto });
+    if (!texto || !cliente.codigo) return;
+    cliente.enviar('falar', { texto });
     inp.value = '';
   });
 

@@ -7,6 +7,14 @@ Truco Paulista (com vira e manilha) 100% web, jogável contra a IA ou com amigos
 - Abra `http://localhost:3000/jogo/` (ou pelo botão "Jogar Truco" na tela inicial dos torneios)
 - Contra a IA funciona até em hospedagem estática; o modo online precisa do `server.js` (Socket.IO)
 
+## Hospedagem no WordPress (sem Node.js)
+O jogo também roda como plugin do WordPress (em produção: https://truco.zillesg.tech/jogo/).
+- Gerar o pacote: `./wordpress/empacotar.sh` (cria `wordpress/truco-online.zip`)
+- Instalar em **Plugins > Adicionar plugin > Enviar plugin** (ou substituir a versão atual)
+- O plugin serve o jogo em `/jogo/` e o `relay.php` repassa as mensagens das salas online
+- Nesse modo, o navegador de quem cria a sala comanda a partida: se o anfitrião sair, a sala é encerrada
+- As mensagens ficam nas tabelas `wp_truco_salas` e `wp_truco_msgs` e são apagadas depois de 6 horas
+
 ## Modos
 - **Contra a IA**: 1 x 1 ou 2 x 2 (você + bot parceiro contra 2 bots), dificuldade Fácil, Médio ou Difícil
 - **Online**: crie uma sala (1 x 1 ou 2 x 2), compartilhe o código/link (WhatsApp) e os lugares vagos viram bots
@@ -35,6 +43,8 @@ Truco Paulista (com vira e manilha) 100% web, jogável contra a IA ou com amigos
 | `jogo/compartilhado/motor.js` | Regras do jogo (usado no navegador e no servidor) |
 | `jogo/compartilhado/ia.js` | IA com simulações de Monte Carlo (só vê o que um jogador veria) |
 | `jogo/compartilhado/mesa.js` | Controle da partida, bots, tempos e falas |
+| `jogo/compartilhado/sala.js` | Lobby, assentos e reconexão (usado pelo Node e pelo anfitrião no WordPress) |
 | `jogo/servidor/salas.js` | Salas online no namespace `/truco` do Socket.IO |
 | `jogo/js/*.js` | Interface, áudio, efeitos, cartas e conexões |
 | `jogo/testes/motor.test.js` | Testes (`npm test`) |
+| `wordpress/truco-online/` | Plugin do WordPress (página `/jogo/` e `relay.php`) |

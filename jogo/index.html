@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0b3d2a" />
+  <meta name="description" content="Truco Paulista online: jogue contra a IA ou com amigos, com efeitos visuais e sonoros." />
+  <title>Truco Online</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rye&family=Nunito:wght@400;700;800;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/jogo.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>" />
+</head>
+<body>
+  <canvas id="fundo" aria-hidden="true"></canvas>
+
+  <main id="app">
+    <!-- MENU PRINCIPAL -->
+    <section id="tela-menu" class="tela ativa">
+      <div class="menu-conteudo">
+        <div class="logo">
+          <div class="leque" id="leque" aria-hidden="true"></div>
+          <h1 class="titulo"><span>T</span><span>R</span><span>U</span><span>C</span><span>O</span><span>!</span></h1>
+          <p class="subtitulo">Paulista • com vira e manilha</p>
+        </div>
+
+        <div class="painel">
+          <div class="campo">
+            <label for="inp-nome">Seu nome</label>
+            <input id="inp-nome" maxlength="16" placeholder="Como te chamam na mesa?" autocomplete="nickname" />
+          </div>
+          <div class="avatares" id="avatares" role="radiogroup" aria-label="Escolha seu avatar"></div>
+
+          <div class="grupo">
+            <h3>🤖 Contra a IA</h3>
+            <div class="seletor" data-grupo="modoLocal">
+              <button data-valor="2" class="ativo">1 x 1</button>
+              <button data-valor="4">2 x 2</button>
+            </div>
+            <div class="seletor" data-grupo="dificuldade">
+              <button data-valor="facil">Fácil</button>
+              <button data-valor="medio" class="ativo">Médio</button>
+              <button data-valor="dificil">Difícil</button>
+            </div>
+            <button id="btn-jogar-ia" class="btn btn-primario btn-grande">🃏 Jogar agora</button>
+          </div>
+
+          <div class="grupo" id="grupo-online">
+            <h3>🌐 Com amigos online</h3>
+            <div class="seletor" data-grupo="modoOnline">
+              <button data-valor="2">1 x 1</button>
+              <button data-valor="4" class="ativo">2 x 2</button>
+            </div>
+            <button id="btn-criar-sala" class="btn btn-secundario">➕ Criar sala</button>
+            <div class="linha-entrar">
+              <input id="inp-codigo" maxlength="4" placeholder="CÓDIGO" autocomplete="off" autocapitalize="characters" />
+              <button id="btn-entrar-sala" class="btn btn-secundario">Entrar</button>
+            </div>
+            <p class="dica" id="online-status"></p>
+          </div>
+
+          <div class="rodape-menu">
+            <button class="btn btn-link" id="btn-regras">📜 Regras</button>
+            <button class="btn btn-link" id="btn-config">🔊 Som e voz</button>
+            <a class="btn btn-link" href="../">🏆 Torneios</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SALA ONLINE (LOBBY) -->
+    <section id="tela-sala" class="tela">
+      <div class="sala-conteudo">
+        <header class="sala-topo">
+          <button class="btn btn-link" id="btn-sair-sala">← Sair</button>
+          <h2>Sala</h2>
+          <span></span>
+        </header>
+
+        <div class="codigo-sala">
+          <span class="rotulo">Código da sala</span>
+          <div class="codigo" id="sala-codigo">----</div>
+          <div class="compartilhar">
+            <button class="btn btn-secundario" id="btn-copiar-link">🔗 Copiar link</button>
+            <a class="btn btn-whats" id="btn-whats" target="_blank" rel="noopener">💬 WhatsApp</a>
+          </div>
+        </div>
+
+        <div class="equipes">
+          <div class="equipe equipe-0">
+            <h3>Equipe 1</h3>
+            <div class="assentos" data-equipe="0"></div>
+          </div>
+          <div class="vs">VS</div>
+          <div class="equipe equipe-1">
+            <h3>Equipe 2</h3>
+            <div class="assentos" data-equipe="1"></div>
+          </div>
+        </div>
+
+        <div class="config-sala" id="config-sala">
+          <span>Dificuldade dos bots:</span>
+          <div class="seletor pequeno" data-grupo="dificuldadeSala">
+            <button data-valor="facil">Fácil</button>
+            <button data-valor="medio" class="ativo">Médio</button>
+            <button data-valor="dificil">Difícil</button>
+          </div>
+        </div>
+
+        <button id="btn-iniciar" class="btn btn-primario btn-grande">▶ Começar partida</button>
+        <p class="dica" id="sala-aguarde">Aguardando o anfitrião começar...</p>
+        <p class="dica">Lugares vazios são ocupados por bots.</p>
+
+        <div class="chat">
+          <div class="chat-msgs" id="chat-msgs"></div>
+          <form id="chat-form" class="chat-form">
+            <input id="chat-inp" maxlength="80" placeholder="Mande um recado..." autocomplete="off" />
+            <button class="btn btn-secundario">Enviar</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- MESA DE JOGO -->
+    <section id="tela-jogo" class="tela">
+      <div id="mesa">
+        <div class="madeira"></div>
+        <div class="feltro"><div class="feltro-logo">TRUCO</div></div>
+
+        <div id="placar" class="placar">
+          <div class="time nos">
+            <span class="nome-time">Nós</span>
+            <span class="pontos" id="pontos-nos">0</span>
+            <div class="tentos" id="tentos-nos"></div>
+          </div>
+          <div class="time eles">
+            <span class="nome-time">Eles</span>
+            <span class="pontos" id="pontos-eles">0</span>
+            <div class="tentos" id="tentos-eles"></div>
+          </div>
+        </div>
+
+        <div id="valendo" class="valendo nivel-0">Vale <b>1</b></div>
+        <div id="vazas-pips" class="vazas-pips"><i></i><i></i><i></i></div>
+        <div id="info-manilha" class="info-manilha"></div>
+
+        <div class="topo-direita">
+          <button class="btn-redondo" id="btn-emotes" title="Falar">💬</button>
+          <button class="btn-redondo" id="btn-som" title="Som">🔊</button>
+          <button class="btn-redondo" id="btn-menu-jogo" title="Menu">☰</button>
+        </div>
+
+        <div id="jogadores"></div>
+        <div id="camada-cartas"></div>
+        <div id="aviso-central" class="aviso-central"></div>
+
+        <div id="painel-acoes" class="painel-acoes"></div>
+        <div id="painel-decisao" class="painel-decisao oculto">
+          <div class="decisao-titulo" id="decisao-titulo"></div>
+          <div class="decisao-texto" id="decisao-texto"></div>
+          <div class="decisao-botoes" id="decisao-botoes"></div>
+        </div>
+
+        <div id="emotes" class="emotes oculto"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="fx-texto" aria-live="polite"></div>
+  <div id="flash"></div>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div id="toasts"></div>
+
+  <div id="modal" class="modal oculto" role="dialog" aria-modal="true">
+    <div class="modal-caixa">
+      <button class="modal-fechar" id="modal-fechar" aria-label="Fechar">✕</button>
+      <div class="modal-conteudo" id="modal-conteudo"></div>
+    </div>
+  </div>
+
+  <div id="fim-jogo" class="fim-jogo oculto">
+    <div class="fim-caixa">
+      <div class="fim-icone" id="fim-icone">🏆</div>
+      <h2 id="fim-titulo">VITÓRIA!</h2>
+      <p id="fim-placar"></p>
+      <div class="fim-botoes">
+        <button class="btn btn-primario btn-grande" id="btn-revanche">🔁 Jogar de novo</button>
+        <button class="btn btn-secundario" id="btn-fim-menu">Menu principal</button>
+      </div>
+      <p class="dica" id="fim-dica"></p>
+    </div>
+  </div>
+
+  <script src="compartilhado/motor.js"></script>
+  <script src="compartilhado/ia.js"></script>
+  <script src="compartilhado/mesa.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/efeitos.js"></script>
+  <script src="js/cartas.js"></script>
+  <script src="js/conexao.js"></script>
+  <script src="js/interface.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '2.1.2',
-  BUILD_DATE: '2025-01-31',
-  LAST_UPDATE: '16:45',
+  VERSION: '2.2.0',
+  BUILD_DATE: '2026-10-19',
+  LAST_UPDATE: '23:30',
   
   // Changelog resumido
   CHANGES: {
+    '2.2.0': 'Novo: Jogo de Truco Paulista em /jogo (contra a IA ou online com amigos, com efeitos visuais e sonoros)',
     '2.1.2': 'Correção: BracketSystem não carregado - ajustado nome da exportação',
     '2.1.1': 'Correções: Layout mobile, geração de bracket e remoção de texto de desenvolvimento',
     '2.1.0': 'Novo sistema: Cadastro de participantes individuais e formação de duplas',

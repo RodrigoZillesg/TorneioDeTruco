@@ -4,14 +4,12 @@
  * navegador do anfitrião quando o jogo roda hospedado no WordPress.
  */
 (function (raiz, fabrica) {
-  if (typeof module === 'object' && module.exports) module.exports = fabrica(require('./mesa'));
-  else raiz.TrucoSala = fabrica(raiz.TrucoMesa);
-})(typeof self !== 'undefined' ? self : this, function (Mesa) {
+  if (typeof module === 'object' && module.exports) module.exports = fabrica(require('./mesa'), require('./elenco'));
+  else raiz.TrucoSala = fabrica(raiz.TrucoMesa, raiz.TrucoElenco);
+})(typeof self !== 'undefined' ? self : this, function (Mesa, Elenco) {
   'use strict';
 
   const DIFICULDADES = ['facil', 'medio', 'dificil'];
-  const NOMES_BOTS = ['Zé da Viola', 'Dona Cida', 'Tião Carreiro', 'Mané Zap', 'Chico Bento', 'Tonhão', 'Nhô Quim', 'Rosinha'];
-  const AVATARES_BOTS = ['🤠', '👵', '🧔', '😎', '👒', '🐂', '👴', '🌻'];
 
   function limparTexto(texto, max) {
     return String(texto || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -46,10 +44,9 @@
     }
 
     criarBot(assento) {
-      const usados = new Set(this.assentos.filter(Boolean).map(a => a.nome));
-      let i = Math.floor(Math.random() * NOMES_BOTS.length);
-      for (let k = 0; k < NOMES_BOTS.length && usados.has(NOMES_BOTS[i]); k++) i = (i + 1) % NOMES_BOTS.length;
-      return { token: null, nome: NOMES_BOTS[i], avatar: AVATARES_BOTS[i], bot: true, conectado: true, assento };
+      const usados = this.assentos.filter(Boolean).flatMap(a => [a.avatar, a.nome]);
+      const p = Elenco.sortearBots(1, usados)[0];
+      return { token: null, nome: p.nome, avatar: p.avatar, bot: true, conectado: true, assento };
     }
 
     dadosPublicos(token) {
@@ -66,8 +63,23 @@
 
     enviarSala() {
       for (const a of this.assentos) {
-        if (a && a.token && a.conectado) this.enviar(a.token, 'sala', this.dadosPublicos(a.token));
+        if (a && a.token && a.conectado) {
+          this.enviarFotos(a);
+          this.enviar(a.token, 'sala', this.dadosPublicos(a.token));
+        }
       }
+    }
+
+    // Fotos dos jogadores vão em mensagens separadas, uma vez para cada destinatário
+    enviarFotos(destino) {
+      destino.fotosEnviadas = destino.fotosEnviadas || new Set();
+      this.assentos.forEach((a, i) => {
+        if (!a || !a.foto) return;
+        const chave = i + ':' + a.token + ':' + a.foto.length;
+        if (destino.fotosEnviadas.has(chave)) return;
+        destino.fotosEnviadas.add(chave);
+        this.enviar(destino.token, 'foto', { assento: i, foto: a.foto });
+      });
     }
 
     avisar(texto) {
@@ -96,6 +108,7 @@
         const a = this.assentos[assento];
         clearTimeout(a.timerAusencia);
         a.conectado = true;
+        a.fotosEnviadas = new Set();
         if (this.estado === 'jogo' && this.mesa) this.mesa.definirSubstituto(assento, false);
       } else {
         if (this.estado !== 'lobby') return { ok: false, erro: 'A partida já começou' };
@@ -103,10 +116,12 @@
         if (livre < 0) livre = this.assentos.findIndex(a => a && a.bot);
         if (livre < 0) return { ok: false, erro: 'Sala cheia' };
         assento = livre;
+        const foto = dados.avatar === 'foto' && Elenco.fotoValida(dados.foto) ? dados.foto : null;
         this.assentos[assento] = {
           token,
           nome: limparTexto(dados.nome, 16) || 'Jogador',
-          avatar: limparTexto(dados.avatar, 8) || '🙂',
+          avatar: foto ? 'foto' : Elenco.avatarValido(dados.avatar),
+          foto,
           bot: false,
           conectado: true,
           assento
@@ -190,7 +205,7 @@
       } else {
         const a = this.assentos[assento];
         for (const b of this.assentos) {
-          if (b && b.token && b.conectado) this.enviar(b.token, 'chat', { nome: a.nome, avatar: a.avatar, texto });
+          if (b && b.token && b.conectado) this.enviar(b.token, 'chat', { nome: a.nome, texto });
         }
       }
     }

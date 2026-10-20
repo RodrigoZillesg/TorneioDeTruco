@@ -111,10 +111,10 @@
       this.aleatorio = criarAleatorio(opcoes.semente);
       this.jogadores = (opcoes.jogadores || []).slice(0, this.numJogadores).map((j, i) => ({
         nome: j.nome || 'Jogador ' + (i + 1),
-        avatar: j.avatar || '🙂'
+        avatar: j.avatar || 'p:ze'
       }));
       while (this.jogadores.length < this.numJogadores) {
-        this.jogadores.push({ nome: 'Jogador ' + (this.jogadores.length + 1), avatar: '🙂' });
+        this.jogadores.push({ nome: 'Jogador ' + (this.jogadores.length + 1), avatar: 'p:ze' });
       }
       this.placar = [0, 0];
       this.distribuidor = Math.floor(this.aleatorio() * this.numJogadores);

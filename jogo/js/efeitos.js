@@ -169,7 +169,7 @@ window.Efeitos = (function () {
       document.body.appendChild(el);
     }
     document.getElementById('fx-texto').querySelectorAll('.texto-grande').forEach(e => e.remove());
-    el.querySelector('.anuncio-av').textContent = o.avatar || '';
+    el.querySelector('.anuncio-av').innerHTML = o.avatarHtml || '';
     el.querySelector('.anuncio-nome').textContent = o.quem || '';
     el.querySelector('.anuncio-titulo').textContent = o.titulo || '';
     el.querySelector('.anuncio-sub').textContent = o.subtitulo || '';

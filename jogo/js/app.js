@@ -5,17 +5,23 @@
   'use strict';
 
   const $ = (id) => document.getElementById(id);
-  const AVATARES = ['🙂', '😎', '🤠', '🧔', '👩', '👴', '👵', '🦊', '🐂', '🐔', '🦁', '🐸', '🤖', '👽', '🎩', '🌵'];
   const CHAVE = 'truco.perfil';
+  const ELENCO = TrucoElenco.ELENCO;
 
   const perfil = Object.assign({
     nome: '',
-    avatar: AVATARES[Math.floor(Math.random() * AVATARES.length)],
+    avatar: 'p:' + ELENCO[Math.floor(Math.random() * ELENCO.length)].id,
+    foto: null,
     modoLocal: '2',
     dificuldade: 'medio',
     modoOnline: '4',
     token: Math.random().toString(36).slice(2) + Date.now().toString(36)
   }, lerPerfil());
+  // Perfis antigos guardavam um emoji: troca por um personagem
+  if (perfil.avatar !== 'foto' || !TrucoElenco.fotoValida(perfil.foto)) {
+    perfil.avatar = perfil.avatar === 'foto' ? 'p:ze' : TrucoElenco.avatarValido(perfil.avatar);
+  }
+  if (!TrucoElenco.fotoValida(perfil.foto)) perfil.foto = null;
   salvarPerfil();
 
   function lerPerfil() {
@@ -62,23 +68,73 @@
     alvo.addEventListener('pointerenter', () => { Som.iniciar(); Som.tocar('deslizar'); });
   }
 
-  function montarAvatares() {
-    const alvo = $('avatares');
+  // ---------- Escolha do personagem ----------
+  function nomeDoAvatar(avatar) {
+    if (avatar === 'foto') return 'Sua foto';
+    const p = TrucoElenco.porId(avatar.slice(2));
+    return p ? p.nome : '';
+  }
+
+  function atualizarPersonagemAtual() {
+    Personagens.definirFoto('perfil', perfil.foto);
+    $('personagem-atual').innerHTML = `<div class="retrato">${Personagens.html(perfil.avatar, { chaveFoto: 'perfil', expressao: 'feliz' })}</div>` +
+      `<div><span class="rotulo">Você joga como</span><b>${escapar(nomeDoAvatar(perfil.avatar))}</b></div>`;
+    $('personagens').querySelectorAll('button').forEach(b => {
+      b.classList.toggle('ativo', b.dataset.avatar === perfil.avatar);
+      b.setAttribute('aria-checked', b.dataset.avatar === perfil.avatar ? 'true' : 'false');
+    });
+  }
+
+  function escolherAvatar(avatar) {
+    perfil.avatar = avatar;
+    salvarPerfil();
+    atualizarPersonagemAtual();
+    Som.tocar('pop');
+  }
+
+  function montarPersonagens() {
+    const alvo = $('personagens');
     alvo.innerHTML = '';
-    AVATARES.forEach(a => {
+    ELENCO.forEach(p => {
       const b = document.createElement('button');
-      b.textContent = a;
+      b.type = 'button';
+      b.dataset.avatar = 'p:' + p.id;
       b.setAttribute('role', 'radio');
-      b.setAttribute('aria-label', 'Avatar ' + a);
-      b.classList.toggle('ativo', a === perfil.avatar);
-      b.onclick = () => {
-        perfil.avatar = a;
-        salvarPerfil();
-        alvo.querySelectorAll('button').forEach(x => x.classList.toggle('ativo', x === b));
-        Som.tocar('pop');
-      };
+      b.title = p.nome;
+      b.innerHTML = `<span class="retrato">${Personagens.svg(p.id)}</span><span class="nome-p">${escapar(p.nome)}</span>`;
+      b.onclick = () => escolherAvatar('p:' + p.id);
       alvo.appendChild(b);
     });
+    const foto = document.createElement('button');
+    foto.type = 'button';
+    foto.dataset.avatar = 'foto';
+    foto.className = 'opcao-foto';
+    foto.setAttribute('role', 'radio');
+    foto.title = 'Usar sua foto';
+    const desenharFoto = () => {
+      Personagens.definirFoto('perfil', perfil.foto);
+      foto.innerHTML = `<span class="retrato">${perfil.foto ? Personagens.html('foto', { chaveFoto: 'perfil' }) : '<span class="camera">📷</span>'}</span>` +
+        `<span class="nome-p">${perfil.foto ? 'Trocar foto' : 'Sua foto'}</span>`;
+    };
+    desenharFoto();
+    foto.onclick = () => {
+      if (perfil.foto && perfil.avatar !== 'foto') return escolherAvatar('foto');
+      $('inp-foto').click();
+    };
+    $('inp-foto').onchange = async () => {
+      const arquivo = $('inp-foto').files[0];
+      $('inp-foto').value = '';
+      if (!arquivo) return;
+      try {
+        perfil.foto = await Personagens.prepararFoto(arquivo);
+        desenharFoto();
+        escolherAvatar('foto');
+      } catch (e) {
+        Interface.toast(e.message || 'Não foi possível usar essa foto', true);
+      }
+    };
+    alvo.appendChild(foto);
+    atualizarPersonagemAtual();
   }
 
   function configurarSeletores() {
@@ -111,7 +167,8 @@
       numJogadores: Number(perfil.modoLocal) === 4 ? 4 : 2,
       dificuldade: perfil.dificuldade,
       nome: nomeJogador(),
-      avatar: perfil.avatar
+      avatar: perfil.avatar,
+      foto: perfil.foto
     });
     entrarNaMesa(conexao);
   };
@@ -170,7 +227,12 @@
       }
       conexaoOnline.receber(pacote);
     });
-    cliente.on('chat', (m) => adicionarChat(`<b>${escapar(m.avatar + ' ' + m.nome)}:</b> ${escapar(m.texto)}`));
+    cliente.on('chat', (m) => adicionarChat(`<b>${escapar(m.nome)}:</b> ${escapar(m.texto)}`));
+    cliente.on('foto', (m) => {
+      if (!m) return;
+      Personagens.definirFoto('a' + m.assento, m.foto);
+      if (cliente.sala) renderizarSala(cliente.sala);
+    });
     cliente.on('aviso', (m) => Interface.toast(m.texto));
     cliente.on('expulso', (m) => { Interface.toast(m.texto, true); voltarAoMenu(); });
     cliente.on('desconectado', () => { if (cliente.codigo) Interface.toast('Conexão perdida. Tentando reconectar...', true); });
@@ -178,7 +240,9 @@
   }
 
   function dadosEntrada() {
-    return { nome: nomeJogador(), avatar: perfil.avatar, token: perfil.token };
+    const dados = { nome: nomeJogador(), avatar: perfil.avatar, token: perfil.token };
+    if (perfil.avatar === 'foto' && perfil.foto) dados.foto = perfil.foto;
+    return dados;
   }
 
   $('btn-criar-sala').onclick = async () => {
@@ -245,7 +309,7 @@
           d.onclick = () => cliente.enviar('assento', { assento: i });
         } else {
           d.className = 'assento' + (i === sala.meuAssento ? ' eu' : '') + (a.conectado ? '' : ' offline');
-          d.innerHTML = `<span class="av">${escapar(a.avatar)}</span><span class="nome">${escapar(a.nome)}</span>` +
+          d.innerHTML = `<span class="av">${Personagens.html(a.avatar, { chaveFoto: 'a' + i })}</span><span class="nome">${escapar(a.nome)}</span>` +
             (a.host ? '<span class="tag">👑 anfitrião</span>' : '') + (a.bot ? '<span class="tag">🤖 bot</span>' : '') +
             (i === sala.meuAssento ? '<span class="tag">você</span>' : '');
           if (sala.souHost && i !== sala.meuAssento) {
@@ -406,7 +470,7 @@
 
   // ---------- Início ----------
   montarLeque();
-  montarAvatares();
+  montarPersonagens();
   configurarSeletores();
   atualizarBotaoSom();
   prepararOnline();

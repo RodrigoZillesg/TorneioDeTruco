@@ -30,7 +30,12 @@
             <label for="inp-nome">Seu nome</label>
             <input id="inp-nome" maxlength="16" placeholder="Como te chamam na mesa?" autocomplete="nickname" />
           </div>
-          <div class="avatares" id="avatares" role="radiogroup" aria-label="Escolha seu avatar"></div>
+          <div class="campo">
+            <label>Seu personagem</label>
+            <div class="personagem-atual" id="personagem-atual"></div>
+            <div class="personagens" id="personagens" role="radiogroup" aria-label="Escolha seu personagem"></div>
+            <input type="file" id="inp-foto" accept="image/*" hidden />
+          </div>
 
           <div class="grupo">
             <h3>🤖 Contra a IA</h3>
@@ -192,6 +197,7 @@
     </div>
   </div>
 
+  <script src="compartilhado/elenco.js"></script>
   <script src="compartilhado/motor.js"></script>
   <script src="compartilhado/ia.js"></script>
   <script src="compartilhado/mesa.js"></script>
@@ -199,6 +205,7 @@
   <script src="js/audio.js"></script>
   <script src="js/efeitos.js"></script>
   <script src="js/cartas.js"></script>
+  <script src="js/personagens.js"></script>
   <script src="js/conexao.js"></script>
   <script src="js/interface.js"></script>
   <script src="js/app.js"></script>

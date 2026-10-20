@@ -207,17 +207,40 @@ input { font-family: inherit; }
   user-select: text;
 }
 .campo input:focus, .linha-entrar input:focus, .chat-form input:focus { border-color: var(--ouro); }
-.avatares { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-.avatares button {
-  width: 42px; height: 42px;
-  font-size: 22px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  background: rgba(255, 255, 255, .06);
-  transition: transform .15s, border-color .2s, background .2s;
+.personagem-atual { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.personagem-atual .retrato { width: 78px; height: 78px; flex: none; border-radius: 50%; overflow: hidden; border: 3px solid var(--ouro); box-shadow: 0 0 18px rgba(245, 197, 66, .45); }
+.personagem-atual .rotulo { display: block; font-size: 12px; opacity: .7; }
+.personagem-atual b { font-family: var(--fonte-titulo); font-weight: 400; font-size: 22px; color: var(--ouro); }
+.personagens { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.personagens button {
+  border: 0;
+  background: transparent;
+  color: var(--creme);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
 }
-.avatares button:hover { transform: scale(1.12); }
-.avatares button.ativo { border-color: var(--ouro); background: rgba(245, 197, 66, .2); transform: scale(1.12); }
+.personagens .retrato {
+  width: 100%;
+  max-width: 62px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, .15);
+  transition: transform .15s, border-color .2s, box-shadow .2s;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, .06);
+}
+.personagens button:hover .retrato { transform: scale(1.08); }
+.personagens button.ativo .retrato { border-color: var(--ouro); box-shadow: 0 0 14px rgba(245, 197, 66, .7); transform: scale(1.08); }
+.personagens .nome-p { font-size: 10px; font-weight: 800; line-height: 1.1; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .85; }
+.personagens .camera { font-size: 24px; }
+.retrato svg, .retrato img, .av svg, .av img, .anuncio-av svg, .anuncio-av img { width: 100%; height: 100%; display: block; }
+.foto-jogador { object-fit: cover; }
 .grupo {
   display: flex;
   flex-direction: column;
@@ -267,7 +290,7 @@ input { font-family: inherit; }
   animation: entraAssento .4s ease;
 }
 @keyframes entraAssento { from { transform: scale(.8); opacity: 0; } }
-.assento .av { font-size: 26px; }
+.assento .av { width: 40px; height: 40px; flex: none; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255, 255, 255, .25); }
 .assento .nome { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .assento .tag { font-size: 10px; padding: 2px 6px; border-radius: 6px; background: rgba(0, 0, 0, .4); }
 .assento.eu { outline: 2px solid var(--ouro); }
@@ -433,22 +456,24 @@ input { font-family: inherit; }
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  width: 86px;
+  width: 110px;
   transition: left .4s, top .4s;
   pointer-events: none;
 }
 .jogador .avatar {
   position: relative;
-  width: 52px; height: 52px;
+  width: 76px; height: 76px;
   border-radius: 50%;
   display: grid; place-items: center;
-  font-size: 30px;
   background: radial-gradient(circle at 35% 30%, #3b4a40, #121a15);
   border: 3px solid var(--nos);
   box-shadow: 0 4px 12px rgba(0, 0, 0, .5);
   transition: box-shadow .3s, transform .3s;
 }
 .jogador.equipe-1 .avatar { border-color: var(--eles); }
+.jogador .retrato { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; }
+.jogador.reage .retrato { animation: reage .6s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes reage { 30% { transform: scale(1.18) rotate(-6deg); } 60% { transform: scale(.95) rotate(4deg); } }
 .jogador.vez .avatar { transform: scale(1.12); box-shadow: 0 0 0 4px rgba(245, 197, 66, .6), 0 0 26px var(--ouro); animation: brilhaVez 1.2s ease-in-out infinite; }
 @keyframes brilhaVez { 50% { box-shadow: 0 0 0 7px rgba(245, 197, 66, .25), 0 0 40px var(--ouro); } }
 .jogador.offline .avatar { filter: grayscale(1); opacity: .6; }
@@ -458,7 +483,7 @@ input { font-family: inherit; }
   padding: 2px 8px;
   border-radius: 8px;
   background: rgba(0, 0, 0, .6);
-  max-width: 96px;
+  max-width: 110px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -844,7 +869,7 @@ input { font-family: inherit; }
   color: #fff3d6;
   text-shadow: 0 2px 4px rgba(0, 0, 0, .6);
 }
-.anuncio-av { font-size: 1.5em; }
+.anuncio-av { width: 2.6em; height: 2.6em; border-radius: 50%; overflow: hidden; border: 3px solid #ffd65c; display: inline-block; }
 .anuncio-titulo {
   font-family: var(--fonte-titulo);
   font-size: clamp(64px, 14vw, 170px);
@@ -956,9 +981,9 @@ input { font-family: inherit; }
   .btn-redondo { width: 36px; height: 36px; font-size: 15px; }
   .btn-truco { font-size: 20px; padding: 10px 16px; }
   .painel-acoes.estreito { right: auto; left: 50%; transform: translateX(-50%); flex-direction: row; align-items: center; }
-  .jogador { width: 70px; }
-  .jogador .avatar { width: 42px; height: 42px; font-size: 24px; }
-  .jogador .nome { font-size: 11px; max-width: 76px; }
+  .jogador { width: 80px; }
+  .jogador .avatar { width: 52px; height: 52px; }
+  .jogador .nome { font-size: 11px; max-width: 80px; }
   .codigo { font-size: 42px; letter-spacing: 10px; }
   .equipes { grid-template-columns: 1fr; }
   .vs { text-align: center; font-size: 22px; }

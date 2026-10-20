@@ -224,6 +224,24 @@ teste('sala: entrada, reconexão, bots e início da partida', () => {
   }
 });
 
+teste('sala: personagens dos bots e foto do jogador enviada uma vez', () => {
+  const Sala = require('../compartilhado/sala');
+  const Elenco = require('../compartilhado/elenco');
+  const enviados = [];
+  const sala = new Sala({ codigo: 'FOTO', hostToken: 'h', numJogadores: 4, enviar: (t, ev, d) => enviados.push([t, ev, d]) });
+  const foto = 'data:image/jpeg;base64,' + 'A'.repeat(400);
+  assert(sala.entrar('h', { nome: 'Ana', avatar: 'foto', foto }).ok);
+  assert(sala.entrar('g', { nome: 'Beto', avatar: '😀' }).ok);
+  assert.strictEqual(sala.assentos[0].avatar, 'foto');
+  assert.strictEqual(sala.assentos[1].avatar, 'p:ze', 'emoji vira personagem padrão');
+  sala.alterarBot('h', 2, true);
+  assert(Elenco.porId(sala.assentos[2].avatar.slice(2)), 'bot usa personagem do elenco');
+  const fotosParaG = enviados.filter(([t, ev]) => t === 'g' && ev === 'foto');
+  assert.strictEqual(fotosParaG.length, 1);
+  assert.strictEqual(fotosParaG[0][2].assento, 0);
+  assert(!Elenco.fotoValida('data:image/jpeg;base64,' + 'A'.repeat(20000)), 'foto grande é recusada');
+});
+
 if (falhas) {
   console.error('\n' + falhas + ' teste(s) falharam');
   process.exit(1);

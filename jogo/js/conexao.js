@@ -5,25 +5,26 @@
 window.Conexoes = (function () {
   'use strict';
 
-  const NOMES_BOTS = ['Zé da Viola', 'Dona Cida', 'Tião Carreiro', 'Mané Zap', 'Chico Bento', 'Tonhão', 'Nhô Quim', 'Rosinha'];
-  const AVATARES_BOTS = ['🤠', '👵', '🧔', '😎', '👒', '🐂', '👴', '🌻'];
 
   class ConexaoLocal {
-    constructor({ numJogadores, dificuldade, nome, avatar }) {
+    constructor({ numJogadores, dificuldade, nome, avatar, foto }) {
       this.tipo = 'local';
       this.numJogadores = numJogadores;
       this.dificuldade = dificuldade;
       this.nome = nome;
       this.avatar = avatar;
+      this.foto = foto;
       this.aoPacote = () => {};
       this.mesa = null;
     }
 
     montarJogadores() {
-      const idx = [...NOMES_BOTS.keys()].sort(() => Math.random() - 0.5);
-      return Array.from({ length: this.numJogadores }, (_, i) => (i === 0
-        ? { nome: this.nome, avatar: this.avatar, bot: false }
-        : { nome: NOMES_BOTS[idx[i]], avatar: AVATARES_BOTS[idx[i]], bot: true, dificuldade: this.dificuldade }));
+      const usaFoto = this.avatar === 'foto' && TrucoElenco.fotoValida(this.foto);
+      const avatar = usaFoto ? 'foto' : TrucoElenco.avatarValido(this.avatar);
+      Personagens.definirFoto('a0', usaFoto ? this.foto : null);
+      const bots = TrucoElenco.sortearBots(this.numJogadores - 1, [avatar]);
+      return [{ nome: this.nome, avatar, bot: false }]
+        .concat(bots.map(b => Object.assign(b, { bot: true, dificuldade: this.dificuldade })));
     }
 
     iniciar(aoPacote) {
@@ -107,6 +108,7 @@ window.Conexoes = (function () {
       this.socket.on('sala', (s) => { this.sala = s; this.disparar('sala', s); });
       this.socket.on('estado', (p) => this.disparar('estado', p));
       this.socket.on('chat', (m) => this.disparar('chat', m));
+      this.socket.on('foto', (m) => this.disparar('foto', m));
       this.socket.on('aviso', (m) => this.disparar('aviso', m));
       this.socket.on('expulso', (m) => { this.codigo = null; this.sala = null; this.disparar('expulso', m); });
     }

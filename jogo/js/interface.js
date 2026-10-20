@@ -149,8 +149,8 @@ window.Interface = (function () {
 
   function posInfo(pos) {
     const g = geo;
-    const larg = g.estreito ? 70 : 86;
-    const alt = g.estreito ? 64 : 76;
+    const larg = g.estreito ? 80 : 110;
+    const alt = g.estreito ? 76 : 102;
     if (pos === 'baixo') {
       const metade = g.cw * g.escMinha * 1.5 + 10;
       if (g.estreito) return { x: 8, y: g.topoMao - alt - 4 };
@@ -328,7 +328,7 @@ window.Interface = (function () {
     infos = v.jogadores.map((j, s) => {
       const d = document.createElement('div');
       d.className = 'jogador equipe-' + (s % 2 === v.minhaEquipe ? 0 : 1);
-      d.innerHTML = '<div class="avatar"><span class="emoji"></span><div class="anel"></div><span class="selo oculto">D</span></div>' +
+      d.innerHTML = '<div class="avatar"><div class="retrato"></div><div class="anel"></div><span class="selo oculto">D</span></div>' +
         '<div class="nome"></div><div class="balao"></div>';
       el.jogadores.appendChild(d);
       return d;
@@ -354,7 +354,11 @@ window.Interface = (function () {
       const p = posInfo(pos);
       d.style.left = p.x + 'px';
       d.style.top = p.y + 'px';
-      d.querySelector('.emoji').textContent = j.avatar;
+      const retrato = d.querySelector('.retrato');
+      if (retrato.dataset.avatar !== j.avatar) {
+        retrato.dataset.avatar = j.avatar;
+        retrato.innerHTML = Personagens.html(j.avatar, { chaveFoto: 'a' + s });
+      }
       let nome = j.nome;
       if (j.bot) nome = '🤖 ' + nome;
       d.querySelector('.nome').textContent = nome;
@@ -389,10 +393,31 @@ window.Interface = (function () {
     }
   }
 
+  // Reação do personagem (feliz, bravo, grito) por alguns instantes
+  function expressar(assento, expressao, duracao) {
+    const d = infos[assento];
+    const j = visao && visao.jogadores[assento];
+    if (!d || !j) return;
+    d.classList.remove('reage');
+    void d.offsetWidth;
+    d.classList.add('reage');
+    if (j.avatar === 'foto') return;
+    const retrato = d.querySelector('.retrato');
+    retrato.innerHTML = Personagens.html(j.avatar, { expressao });
+    clearTimeout(retrato._t);
+    retrato._t = setTimeout(() => { retrato.innerHTML = Personagens.html(j.avatar, {}); }, duracao || 1800);
+  }
+
+  function expressarEquipe(equipe, expressao, duracao) {
+    if (!visao) return;
+    visao.jogadores.forEach((j, s) => { if (s % 2 === equipe) expressar(s, expressao, duracao); });
+  }
+
   function perfilVoz(assento) {
     const j = visao && visao.jogadores[assento];
     const h = hash(j ? j.nome : assento);
-    const feminino = j && /(Dona|Rosinha|Cida|Maria|Ana)/i.test(j.nome);
+    const p = j && j.avatar && j.avatar.startsWith('p:') ? TrucoElenco.porId(j.avatar.slice(2)) : null;
+    const feminino = p ? p.genero === 'f' : !!(j && /(Dona|Maria|Ana)/i.test(j.nome));
     return { voz: h % 7, tom: feminino ? 1.35 + (h % 3) * 0.05 : 0.75 + (h % 6) * 0.08, velocidade: 1.0 + (h % 4) * 0.06 };
   }
 
@@ -655,6 +680,7 @@ window.Interface = (function () {
             const c = chave ? centroNaTela(chave) : centroDoAssento(e.assento);
             const nossa = e.equipe === v.minhaEquipe;
             const manilha = venc.carta && venc.carta.valor === v.mao.manilha;
+            expressar(e.assento, 'feliz', 1500);
             Som.tocar(nossa ? 'ganharVaza' : 'perderVaza', manilha);
             Efeitos.explodir(c.x, c.y, { qtd: manilha ? 60 : 30, vel: manilha ? 8 : 5, cores: nossa ? ['#38c3ff', '#bfeaff', '#ffd65c'] : ['#ff5a5a', '#ffc4c4', '#ffd65c'] });
             if (manilha && venc.carta.naipe === 'p') {
@@ -672,8 +698,9 @@ window.Interface = (function () {
           const j = v.jogadores[e.assento];
           const duracao = 1700 + nivel * 150;
           const eu = e.assento === v.meuAssento;
+          expressar(e.assento, 'grito', duracao + 400);
           Efeitos.anuncio({
-            avatar: j.avatar,
+            avatarHtml: Personagens.html(j.avatar, { chaveFoto: 'a' + e.assento, expressao: 'grito' }),
             quem: eu ? 'Você pediu' : j.nome + ' pediu',
             titulo: e.nome + '!',
             subtitulo: 'A mão passa a valer ' + e.valor + ' pontos',
@@ -691,8 +718,8 @@ window.Interface = (function () {
           break;
         }
         case 'resposta': {
-          if (e.resposta === 'aceitar') { mostrarResposta(e.assento, '✔ Aceitou', 'aceito', falaDe(e.assento)); Som.tocar('aceitar'); }
-          else if (e.resposta === 'correr') { mostrarResposta(e.assento, '✖ Correu', 'correu', falaDe(e.assento)); Som.tocar('correr'); }
+          if (e.resposta === 'aceitar') { mostrarResposta(e.assento, '✔ Aceitou', 'aceito', falaDe(e.assento)); Som.tocar('aceitar'); expressar(e.assento, 'feliz', 1600); }
+          else if (e.resposta === 'correr') { mostrarResposta(e.assento, '✖ Correu', 'correu', falaDe(e.assento)); Som.tocar('correr'); expressar(e.assento, 'bravo', 1800); }
           await espera(e.resposta === 'aumentar' ? 100 : 900);
           break;
         }
@@ -735,6 +762,8 @@ window.Interface = (function () {
       return;
     }
     const nossa = e.equipe === v.minhaEquipe;
+    expressarEquipe(e.equipe, 'feliz', 2200);
+    expressarEquipe(1 - e.equipe, 'bravo', 2200);
     const de = { x: geo.rect.left + geo.cx, y: geo.rect.top + geo.cy };
     const alvoEl = nossa ? el.pontosNos : el.pontosEles;
     const r = alvoEl.getBoundingClientRect();
@@ -757,6 +786,8 @@ window.Interface = (function () {
 
   async function animarFimJogo(v, e) {
     const ganhamos = e.equipe === v.minhaEquipe;
+    expressarEquipe(e.equipe, 'feliz', 6000);
+    expressarEquipe(1 - e.equipe, 'bravo', 6000);
     await espera(400);
     Som.abafarMusica(6);
     if (ganhamos) {

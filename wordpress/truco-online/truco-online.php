@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Truco Online
  * Description: Jogo de Truco Paulista com efeitos visuais e sonoros, disponível em /jogo/. Contra a IA ou online com amigos.
- * Version: 2.4.1
+ * Version: 2.5.0
  * Author: Rodrigo Zillesg
  */
 
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Atualizar junto com a versão do plugin: evita que o navegador use arquivos antigos do cache
-const TRUCO_ONLINE_VERSAO = '2.4.1';
+const TRUCO_ONLINE_VERSAO = '2.5.0';
 
 // Serve o jogo em /jogo/ usando os arquivos estáticos do plugin
 add_action('init', function () {

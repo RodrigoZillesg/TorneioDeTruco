@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '2.4.1',
+  VERSION: '2.5.0',
   BUILD_DATE: '2026-10-20',
-  LAST_UPDATE: '02:30',
+  LAST_UPDATE: '03:30',
   
   // Changelog resumido
   CHANGES: {
+    '2.5.0': 'Novo visual dos personagens: estilo flat moderno, com as quatro expressões',
     '2.4.1': 'Melhoria: personagens com acabamento de ilustração (traço de nanquim, sombras, textura e cenário)',
     '2.4.0': 'Novo: personagens caricatos ilustrados (com expressões) e foto própria no lugar dos emojis',
     '2.3.1': 'Correção: cartas sem naipes sobrepostos e anúncio de truco legível',

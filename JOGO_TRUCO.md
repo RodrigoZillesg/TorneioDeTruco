@@ -44,7 +44,7 @@ O jogo também roda como plugin do WordPress (em produção: https://truco.zille
 | `jogo/compartilhado/ia.js` | IA com simulações de Monte Carlo (só vê o que um jogador veria) |
 | `jogo/compartilhado/mesa.js` | Controle da partida, bots, tempos e falas |
 | `jogo/compartilhado/elenco.js` | Lista de personagens (nomes, ids) usada por bots, servidor e interface |
-| `jogo/js/personagens.js` | Desenho dos personagens em SVG (rosto, cabelo, chapéu, roupa) e expressões |
+| `jogo/js/personagens.js` | Desenho dos personagens em SVG no estilo flat (rosto, cabelo, chapéu, roupa) e expressões |
 | `jogo/compartilhado/sala.js` | Lobby, assentos e reconexão (usado pelo Node e pelo anfitrião no WordPress) |
 | `jogo/servidor/salas.js` | Salas online no namespace `/truco` do Socket.IO |
 | `jogo/js/*.js` | Interface, áudio, efeitos, cartas e conexões |

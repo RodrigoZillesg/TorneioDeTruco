@@ -4,12 +4,13 @@
  */
 
 window.AppVersion = {
-  VERSION: '2.4.0',
+  VERSION: '2.4.1',
   BUILD_DATE: '2026-10-20',
-  LAST_UPDATE: '01:30',
+  LAST_UPDATE: '02:30',
   
   // Changelog resumido
   CHANGES: {
+    '2.4.1': 'Melhoria: personagens com acabamento de ilustração (traço de nanquim, sombras, textura e cenário)',
     '2.4.0': 'Novo: personagens caricatos ilustrados (com expressões) e foto própria no lugar dos emojis',
     '2.3.1': 'Correção: cartas sem naipes sobrepostos e anúncio de truco legível',
     '2.3.0': 'Novo: Truco online hospedado no WordPress (plugin com relay, sem servidor Node)',

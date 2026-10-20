@@ -20,72 +20,72 @@ window.Personagens = (function () {
   // Ficha de cada personagem do elenco (TrucoElenco)
   const FICHAS = {
     ze: {
-      fundo: '#e8a83a', pele: PELES.morena, cabelo: '#3a2414', cabeca: { rx: 48, ry: 56, queixo: 0.7 },
+      fundo: '#e8a83a', pele: PELES.morena, cabelo: '#3a2414', cabeca: { rx: 50, ry: 57, queixo: 0.7, bochecha: 1.02, mandibula: 0.84, queixoLarg: 0.34 },
       olhos: '#4a2a12', nariz: 'batata', cabeloTipo: 'curto', chapeu: { tipo: 'palha', cor: '#e9c46a', faixa: '#b3261e' },
       bigode: 'grosso', barba: 'rala', roupa: { tipo: 'xadrez', cor: '#c0392b', cor2: '#7d1e14' }, extras: ['palito'], bochecha: true
     },
     cida: {
-      fundo: '#b58bd1', pele: PELES.clara, cabelo: '#d9d4cf', cabeca: { rx: 50, ry: 54, queixo: 0.8 },
+      fundo: '#b58bd1', pele: PELES.clara, cabelo: '#d9d4cf', cabeca: { rx: 52, ry: 55, queixo: 0.8, bochecha: 1.06, mandibula: 0.86, queixoLarg: 0.36, papada: true },
       olhos: '#3b5a7a', nariz: 'redondo', cabeloTipo: 'coque', oculos: { tipo: 'redondo', cor: '#7a4b9c' },
       roupa: { tipo: 'xale', cor: '#f4e7d3', cor2: '#8e5bb5' }, extras: ['brinco', 'rugas', 'batom'], bochecha: true, sobrancelha: 'fina'
     },
     tiao: {
-      fundo: '#8fb3c9', pele: PELES.parda, cabelo: '#1f140c', cabeca: { rx: 47, ry: 58, queixo: 0.85 },
+      fundo: '#8fb3c9', pele: PELES.parda, cabelo: '#1f140c', cabeca: { rx: 48, ry: 60, queixo: 0.85, bochecha: 0.96, mandibula: 0.86, queixoLarg: 0.4 },
       olhos: '#2b1a0e', nariz: 'aquilino', cabeloTipo: 'curto', chapeu: { tipo: 'couro', cor: '#7a4a26' },
       barba: 'cheia', roupa: { tipo: 'camisa', cor: '#d8cfb8' }, extras: ['lenco-pescoco'], corLenco: '#c0392b'
     },
     mane: {
-      fundo: '#5fc78a', pele: PELES.escura, cabelo: '#140c08', cabeca: { rx: 46, ry: 57, queixo: 0.55 },
+      fundo: '#5fc78a', pele: PELES.escura, cabelo: '#140c08', cabeca: { rx: 46, ry: 60, queixo: 0.55, bochecha: 0.98, mandibula: 0.66, queixoLarg: 0.16 },
       olhos: '#2b1a0e', nariz: 'redondo', cabeloTipo: 'raspado', chapeu: { tipo: 'bone', cor: '#f1c40f', aba: '#c99a00' },
       barba: 'cavanhaque', roupa: { tipo: 'regata', cor: '#ffffff' }, extras: ['dente-ouro', 'corrente']
     },
     rosinha: {
-      fundo: '#f39bb6', pele: PELES.rosada, cabelo: '#6b3a1e', cabeca: { rx: 46, ry: 54, queixo: 0.5 },
+      fundo: '#f39bb6', pele: PELES.rosada, cabelo: '#6b3a1e', cabeca: { rx: 47, ry: 55, queixo: 0.5, bochecha: 0.98, mandibula: 0.64, queixoLarg: 0.18 },
       olhos: '#3f7a3a', nariz: 'fino', cabeloTipo: 'cacheado', roupa: { tipo: 'vestido', cor: '#e84a6f', cor2: '#ffd1dc' },
       extras: ['flor', 'argola', 'batom', 'cilios'], bochecha: true, sobrancelha: 'fina'
     },
     tonhao: {
-      fundo: '#e07a4f', pele: PELES.rosada, cabelo: '#4a2e1a', cabeca: { rx: 56, ry: 54, queixo: 1.0 },
+      fundo: '#e07a4f', pele: PELES.rosada, cabelo: '#4a2e1a', cabeca: { rx: 60, ry: 55, queixo: 1.0, bochecha: 1.1, mandibula: 1.02, queixoLarg: 0.55, papada: true },
       olhos: '#3b2414', nariz: 'batata', cabeloTipo: 'careca', bigode: 'guidao',
       roupa: { tipo: 'camiseta', cor: '#2e8b57' }, extras: ['sobrancelhao'], bochecha: true
     },
     quim: {
-      fundo: '#c9b27a', pele: PELES.clara, cabelo: '#efefef', cabeca: { rx: 44, ry: 58, queixo: 0.6 },
+      fundo: '#c9b27a', pele: PELES.clara, cabelo: '#efefef', cabeca: { rx: 44, ry: 62, queixo: 0.6, bochecha: 0.9, mandibula: 0.6, queixoLarg: 0.16 },
       olhos: '#4a6b8a', nariz: 'aquilino', cabeloTipo: 'careca', chapeu: { tipo: 'feltro', cor: '#5b4a3a', faixa: '#2a1e14' },
       barba: 'branca', bigode: 'grosso', roupa: { tipo: 'terno', cor: '#4a3b2e', cor2: '#e8e0cc' }, extras: ['rugas']
     },
     zefa: {
-      fundo: '#f2c14e', pele: PELES.parda, cabelo: '#2a1a10', cabeca: { rx: 54, ry: 54, queixo: 0.9 },
+      fundo: '#f2c14e', pele: PELES.parda, cabelo: '#2a1a10', cabeca: { rx: 57, ry: 55, queixo: 0.9, bochecha: 1.1, mandibula: 0.96, queixoLarg: 0.45, papada: true },
       olhos: '#2b1a0e', nariz: 'redondo', cabeloTipo: 'curto', chapeu: { tipo: 'lenco', cor: '#d64545', cor2: '#ffffff' },
       roupa: { tipo: 'avental', cor: '#3f6fb5', cor2: '#ffffff' }, extras: ['argola', 'batom'], bochecha: true, sobrancelha: 'fina'
     },
     bene: {
-      fundo: '#7fa7d9', pele: PELES.clara, cabelo: '#8a8a8a', cabeca: { rx: 50, ry: 58, queixo: 0.65 },
+      fundo: '#7fa7d9', pele: PELES.clara, cabelo: '#8a8a8a', cabeca: { rx: 52, ry: 61, queixo: 0.65, bochecha: 0.9, mandibula: 0.62, queixoLarg: 0.2 },
       olhos: '#3b2414', nariz: 'fino', cabeloTipo: 'careca', oculos: { tipo: 'quadrado', cor: '#1c1c1c' },
       bigode: 'fino', roupa: { tipo: 'terno', cor: '#2c3e50', cor2: '#ffffff', gravata: 'borboleta' }, extras: ['rugas']
     },
     lurdinha: {
-      fundo: '#7ed6c4', pele: PELES.morena, cabelo: '#2e1a0e', cabeca: { rx: 45, ry: 53, queixo: 0.55 },
+      fundo: '#7ed6c4', pele: PELES.morena, cabelo: '#2e1a0e', cabeca: { rx: 46, ry: 54, queixo: 0.55, bochecha: 1.0, mandibula: 0.66, queixoLarg: 0.2 },
       olhos: '#4a2a12', nariz: 'fino', cabeloTipo: 'trancas', roupa: { tipo: 'xadrez', cor: '#3a7bd5', cor2: '#1d4f91' },
       extras: ['sardas', 'cilios', 'laco'], bochecha: true, sobrancelha: 'fina'
     },
     gerson: {
-      fundo: '#d98c5f', pele: PELES.morena, cabelo: '#4a2e1a', cabeca: { rx: 49, ry: 58, queixo: 0.95 },
+      fundo: '#d98c5f', pele: PELES.morena, cabelo: '#4a2e1a', cabeca: { rx: 52, ry: 59, queixo: 0.95, bochecha: 1.0, mandibula: 0.98, queixoLarg: 0.5 },
       olhos: '#2b1a0e', nariz: 'aquilino', cabeloTipo: 'curto', chapeu: { tipo: 'cowboy', cor: '#efe0c2', faixa: '#5b3a1e' },
       bigode: 'grosso', roupa: { tipo: 'jeans', cor: '#4a78b0' }, extras: ['costeleta']
     },
     neide: {
-      fundo: '#ffb347', pele: PELES.clara, cabelo: '#c0392b', cabeca: { rx: 49, ry: 54, queixo: 0.7 },
+      fundo: '#ffb347', pele: PELES.clara, cabelo: '#c0392b', cabeca: { rx: 50, ry: 55, queixo: 0.7, bochecha: 1.04, mandibula: 0.78, queixoLarg: 0.3 },
       olhos: '#3f7a3a', nariz: 'redondo', cabeloTipo: 'volume', oculos: { tipo: 'sol-cabeca', cor: '#d63384' },
       roupa: { tipo: 'vestido', cor: '#8e44ad', cor2: '#f1c40f' }, extras: ['argola', 'batom', 'cilios', 'pinta'], bochecha: true, sobrancelha: 'fina'
     },
     bastiao: {
-      fundo: '#9ccf6b', pele: PELES.retinta, cabelo: '#eaeaea', cabeca: { rx: 50, ry: 57, queixo: 0.8 },
+      fundo: '#9ccf6b', pele: PELES.retinta, cabelo: '#eaeaea', cabeca: { rx: 52, ry: 58, queixo: 0.8, bochecha: 1.0, mandibula: 0.9, queixoLarg: 0.4 },
       olhos: '#2b1a0e', nariz: 'batata', cabeloTipo: 'grisalho', bigode: 'grosso', bigodeCor: '#eaeaea',
       roupa: { tipo: 'camisa', cor: '#f4d03f' }, extras: ['rugas', 'lenco-pescoco'], corLenco: '#2e86c1'
     },
     juca: {
-      fundo: '#a3d977', pele: PELES.clara, cabelo: '#c98a3a', cabeca: { rx: 47, ry: 55, queixo: 0.6 },
+      fundo: '#a3d977', pele: PELES.clara, cabelo: '#c98a3a', cabeca: { rx: 49, ry: 56, queixo: 0.6, bochecha: 1.02, mandibula: 0.72, queixoLarg: 0.24 },
       olhos: '#3b5a7a', nariz: 'redondo', cabeloTipo: 'topete', chapeu: { tipo: 'palha-furada', cor: '#e9c46a', faixa: '#7a4a26' },
       roupa: { tipo: 'xadrez', cor: '#e67e22', cor2: '#a04000' }, extras: ['sardas', 'dentuco'], bochecha: true
     }
@@ -106,11 +106,39 @@ window.Personagens = (function () {
   const contorno = (w) => `stroke="${TRACO}" stroke-width="${w || 3}" stroke-linejoin="round" stroke-linecap="round"`;
 
   // ---------- Partes ----------
-  function caminhoCabeca(cx, cy, rx, ry, queixo) {
-    const jw = rx * queixo;
-    return `M ${cx - rx} ${cy} A ${rx} ${ry} 0 0 1 ${cx + rx} ${cy} ` +
-      `C ${cx + rx} ${cy + ry * 0.62}, ${cx + jw} ${cy + ry}, ${cx} ${cy + ry} ` +
-      `C ${cx - jw} ${cy + ry}, ${cx - rx} ${cy + ry * 0.62}, ${cx - rx} ${cy} Z`;
+  const n1 = (v) => Math.round(v * 10) / 10;
+
+  // Curva suave fechada passando pelos pontos (Catmull-Rom convertido em Bézier)
+  function suave(pts) {
+    const n = pts.length;
+    let d = `M ${n1(pts[0][0])} ${n1(pts[0][1])}`;
+    for (let i = 0; i < n; i++) {
+      const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
+      d += ` C ${n1(p1[0] + (p2[0] - p0[0]) / 6)} ${n1(p1[1] + (p2[1] - p0[1]) / 6)}, ${n1(p2[0] - (p3[0] - p1[0]) / 6)} ${n1(p2[1] - (p3[1] - p1[1]) / 6)}, ${n1(p2[0])} ${n1(p2[1])}`;
+    }
+    return d + ' Z';
+  }
+
+  // Cabeça caricata: testa, maçãs do rosto, mandíbula e queixo ajustáveis
+  function caminhoCabeca(cx, cy, rx, ry, c) {
+    const b = c.bochecha || 1;
+    const m = c.mandibula == null ? 0.55 + c.queixo * 0.35 : c.mandibula;
+    const q = c.queixoLarg == null ? 0.12 + c.queixo * 0.3 : c.queixoLarg;
+    const pts = [
+      [cx, cy - ry],
+      [cx + rx * 0.8, cy - ry * 0.8],
+      [cx + rx, cy - ry * 0.18],
+      [cx + rx * b, cy + ry * 0.3],
+      [cx + rx * m, cy + ry * 0.74],
+      [cx + rx * q, cy + ry * 0.98],
+      [cx, cy + ry * 1.02],
+      [cx - rx * q, cy + ry * 0.98],
+      [cx - rx * m, cy + ry * 0.74],
+      [cx - rx * b, cy + ry * 0.3],
+      [cx - rx, cy - ry * 0.18],
+      [cx - rx * 0.8, cy - ry * 0.8]
+    ];
+    return suave(pts);
   }
 
   function corpo(f, g) {
@@ -251,12 +279,17 @@ window.Personagens = (function () {
       case 'raspado':
         return `<path d="M ${cx - rx + 2} ${cy - 10} C ${cx - rx} ${cy - ry - 4}, ${cx + rx} ${cy - ry - 4}, ${cx + rx - 2} ${cy - 10} C ${cx + rx - 14} ${cy - ry * 0.6}, ${cx - rx + 14} ${cy - ry * 0.6}, ${cx - rx + 2} ${cy - 10} Z" fill="${c}" opacity=".85"/>`;
       case 'grisalho': {
-        let t = `<path d="M ${cx - rx - 3} ${cy + 2} C ${cx - rx - 6} ${topo + 14}, ${cx + rx + 6} ${topo + 14}, ${cx + rx + 3} ${cy + 2} ` +
-          `C ${cx + rx - 6} ${cy - 22}, ${cx + rx * 0.5} ${cy - ry * 0.66}, ${cx} ${cy - ry * 0.64} C ${cx - rx * 0.5} ${cy - ry * 0.66}, ${cx - rx + 6} ${cy - 22}, ${cx - rx - 3} ${cy + 2} Z" fill="${c}" ${contorno()}/>`;
-        for (let k = 0; k < 18; k++) {
-          const a = Math.PI * (1.08 + 0.84 * (k / 17));
-          const r = 0.86 + (k % 3) * 0.06;
-          t += `<circle cx="${(cx + Math.cos(a) * rx * r).toFixed(1)}" cy="${(cy - 6 + Math.sin(a) * ry * r * 0.92).toFixed(1)}" r="3.2" fill="none" stroke="#b9b9b9" stroke-width="1.6"/>`;
+        // Cabelo crespo curto: cachinhos em duas camadas sobre a cabeça
+        let t = `<path d="M ${cx - rx - 2} ${cy + 2} C ${cx - rx - 4} ${topo + 18}, ${cx + rx + 4} ${topo + 18}, ${cx + rx + 2} ${cy + 2} ` +
+          `C ${cx + rx - 6} ${cy - 24}, ${cx + rx * 0.5} ${cy - ry * 0.68}, ${cx} ${cy - ry * 0.66} C ${cx - rx * 0.5} ${cy - ry * 0.68}, ${cx - rx + 6} ${cy - 24}, ${cx - rx - 2} ${cy + 2} Z" fill="${escuro(c, 0.18)}" ${contorno(2.5)}/>`;
+        for (const [fator, raio, qtd] of [[1.02, 7, 15], [0.84, 6.2, 11]]) {
+          for (let k = 0; k < qtd; k++) {
+            const a = Math.PI * (1.05 + 0.9 * (k / (qtd - 1)));
+            const x = cx + Math.cos(a) * rx * fator;
+            const y = cy - 8 + Math.sin(a) * ry * fator * 0.92;
+            t += `<circle cx="${n1(x)}" cy="${n1(y)}" r="${raio}" fill="${c}" stroke="${TRACO}" stroke-width="1.6"/>` +
+              `<path d="M ${n1(x - raio * 0.4)} ${n1(y - raio * 0.1)} q ${n1(raio * 0.4)} ${n1(-raio * 0.5)} ${n1(raio * 0.8)} 0" fill="none" stroke="#a9a9a9" stroke-width="1.2"/>`;
+          }
         }
         return t;
       }
@@ -364,35 +397,46 @@ window.Personagens = (function () {
   }
 
   function olhos(f, g, exp) {
-    const y = g.cy - 4;
+    const y = g.cy - 5;
+    const sombra = escuro(f.pele, 0.2);
     let s = '';
     for (const l of [-1, 1]) {
-      const x = g.cx + l * 19;
+      const x = g.cx + l * 20;
+      // Órbita sombreada dá profundidade ao olhar
+      s += `<ellipse cx="${x}" cy="${y + 1}" rx="15" ry="12.5" fill="${sombra}" opacity=".45"/>`;
       if (exp === 'feliz') {
-        s += `<path d="M ${x - 9} ${y + 3} Q ${x} ${y - 9} ${x + 9} ${y + 3}" fill="none" stroke="${TRACO}" stroke-width="3.5" stroke-linecap="round"/>`;
-        if (f.extras.includes('cilios')) s += `<path d="M ${x + l * 9} ${y + 1} l ${l * 5} -4" stroke="${TRACO}" stroke-width="2.5"/>`;
+        s += `<path d="M ${x - 10} ${y + 3} Q ${x} ${y - 9} ${x + 10} ${y + 3}" fill="none" stroke="${TRACO}" stroke-width="4" stroke-linecap="round"/>`;
+        s += `<path d="M ${x - 7} ${y + 8} Q ${x} ${y + 4} ${x + 7} ${y + 8}" fill="none" stroke="${escuro(f.pele, 0.35)}" stroke-width="1.8" stroke-linecap="round"/>`;
+        if (f.extras.includes('cilios')) s += `<path d="M ${x + l * 10} ${y + 2} l ${l * 6} -4 M ${x + l * 7} ${y - 3} l ${l * 4} -5" stroke="${TRACO}" stroke-width="2.4" stroke-linecap="round"/>`;
         continue;
       }
-      const rx = exp === 'grito' ? 10.5 : 9;
-      const ry = exp === 'grito' ? 12 : 10.5;
-      const iris = exp === 'grito' ? 4 : 5.5;
-      s += `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#fff" ${contorno(2.5)}/>`;
-      s += `<circle cx="${x + l * -1.5}" cy="${y + 1.5}" r="${iris}" fill="${f.olhos}"/>`;
-      s += `<circle cx="${x + l * -1.5}" cy="${y + 1.5}" r="${iris * 0.5}" fill="#120a04"/>`;
-      s += `<circle cx="${x + l * -1.5 + 2}" cy="${y - 1}" r="1.8" fill="#fff"/>`;
+      const rx = exp === 'grito' ? 11.5 : 10;
+      const ry = exp === 'grito' ? 13 : 11;
+      const iris = exp === 'grito' ? 4.6 : 6.4;
+      const ix = x + l * -1.5;
+      const iy = y + (exp === 'grito' ? 0 : 1.8);
+      s += `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#ob${g.id})" ${contorno(2.2)}/>`;
+      s += `<circle cx="${ix}" cy="${iy}" r="${iris}" fill="url(#ir${g.id})"/>`;
+      s += `<circle cx="${ix}" cy="${iy}" r="${iris}" fill="none" stroke="${escuro(f.olhos, 0.45)}" stroke-width="1"/>`;
+      s += `<circle cx="${ix}" cy="${iy}" r="${iris * 0.46}" fill="#0d0703"/>`;
+      s += `<circle cx="${ix + 2.2}" cy="${iy - 2.4}" r="${exp === 'grito' ? 1.4 : 2.1}" fill="#fff"/>`;
+      s += `<circle cx="${ix - 2}" cy="${iy + 2.4}" r=".9" fill="#fff" opacity=".85"/>`;
       if (exp === 'bravo') {
-        // Pálpebra baixa e inclinada
-        s += `<path d="M ${x - rx - 2} ${y - ry - 2} L ${x + rx + 2} ${y - ry - 2} L ${x + l * -(rx + 2)} ${y - 1} Z" fill="${f.pele}" transform="${l === 1 ? '' : ''}"/>`;
-        s += `<path d="M ${x + l * (rx + 1)} ${y - ry + 2} L ${x + l * -(rx + 1)} ${y - 2}" stroke="${TRACO}" stroke-width="3" stroke-linecap="round"/>`;
+        // Pálpebra pesada e inclinada para o centro
+        s += `<path d="M ${x - rx - 2} ${y - ry - 3} L ${x + rx + 2} ${y - ry - 3} L ${x + l * -(rx + 2)} ${y - 1} Z" fill="${f.pele}"/>`;
+        s += `<path d="M ${x + l * (rx + 1)} ${y - ry + 3} L ${x + l * -(rx + 1)} ${y - 1}" stroke="${TRACO}" stroke-width="3.6" stroke-linecap="round"/>`;
       } else if (exp !== 'grito') {
-        // Pálpebra superior
-        s += `<path d="M ${x - rx} ${y - 2} Q ${x} ${y - ry - 4} ${x + rx} ${y - 2}" fill="none" stroke="${TRACO}" stroke-width="3"/>`;
+        // Pálpebra superior grossa, como traço de nanquim
+        s += `<path d="M ${x - rx - 1} ${y} Q ${x} ${y - ry - 6} ${x + rx + 1} ${y} Q ${x} ${y - ry - 2} ${x - rx - 1} ${y} Z" fill="${TRACO}"/>`;
+      }
+      // Pálpebra inferior e olheira
+      s += `<path d="M ${x - rx + 2} ${y + ry - 2} Q ${x} ${y + ry + 3} ${x + rx - 2} ${y + ry - 2}" fill="none" stroke="${escuro(f.pele, 0.38)}" stroke-width="1.6" stroke-linecap="round"/>`;
+      if (f.extras.includes('rugas')) {
+        s += `<path d="M ${x - 8} ${y + ry + 4} Q ${x} ${y + ry + 8} ${x + 8} ${y + ry + 4}" fill="none" stroke="${escuro(f.pele, 0.35)}" stroke-width="1.5" stroke-linecap="round"/>`;
+        s += `<path d="M ${x + l * (rx + 4)} ${y - 2} l ${l * 6} -3 M ${x + l * (rx + 4)} ${y + 3} l ${l * 6} 2" stroke="${escuro(f.pele, 0.35)}" stroke-width="1.6" stroke-linecap="round"/>`;
       }
       if (f.extras.includes('cilios')) {
-        s += `<path d="M ${x + l * rx} ${y - 3} l ${l * 5} -4 M ${x + l * (rx - 3)} ${y - ry + 1} l ${l * 3} -5" stroke="${TRACO}" stroke-width="2.5" stroke-linecap="round"/>`;
-      }
-      if (f.extras.includes('rugas')) {
-        s += `<path d="M ${x + l * (rx + 4)} ${y - 2} l ${l * 5} -3 M ${x + l * (rx + 4)} ${y + 3} l ${l * 5} 2" stroke="${escuro(f.pele, 0.35)}" stroke-width="1.8" stroke-linecap="round"/>`;
+        s += `<path d="M ${x + l * rx} ${y - 3} l ${l * 6} -5 M ${x + l * (rx - 4)} ${y - ry + 1} l ${l * 3} -6 M ${x + l * (rx - 9)} ${y - ry - 1} l ${l * 1} -5" stroke="${TRACO}" stroke-width="2.3" stroke-linecap="round"/>`;
       }
     }
     return s;
@@ -400,50 +444,78 @@ window.Personagens = (function () {
 
   function nariz(f, g) {
     const x = g.cx;
-    const y = g.cy + 16;
+    const y = g.cy + 15;
     const p = f.pele;
-    const sombra = escuro(p, 0.18);
+    const sombra = escuro(p, 0.22);
+    // Sombra projetada do nariz sobre o buço
+    let s = `<ellipse cx="${x + 4}" cy="${y + 15}" rx="12" ry="4" fill="${sombra}" opacity=".5"/>`;
     switch (f.nariz) {
       case 'batata':
-        return `<path d="M ${x - 5} ${y - 18} Q ${x - 9} ${y - 2} ${x - 14} ${y + 4} C ${x - 20} ${y + 16}, ${x + 20} ${y + 16}, ${x + 14} ${y + 4} Q ${x + 9} ${y - 2} ${x + 5} ${y - 18}" fill="${sombra}" ${contorno(2.5)}/>` +
-          `<ellipse cx="${x - 3}" cy="${y + 3}" rx="5" ry="3.5" fill="#fff" opacity=".45"/>` +
-          `<path d="M ${x - 8} ${y + 10} q 2 2 5 1 M ${x + 8} ${y + 10} q -2 2 -5 1" fill="none" stroke="${TRACO}" stroke-width="2"/>`;
+        s += `<path d="M ${x - 5} ${y - 20} Q ${x - 9} ${y - 2} ${x - 15} ${y + 4} C ${x - 22} ${y + 17}, ${x + 22} ${y + 17}, ${x + 15} ${y + 4} Q ${x + 9} ${y - 2} ${x + 5} ${y - 20}" fill="url(#na${g.id})" ${contorno(2.5)}/>` +
+          `<ellipse cx="${x - 4}" cy="${y + 4}" rx="6" ry="4" fill="#fff" opacity=".45"/>` +
+          `<path d="M ${x - 9} ${y + 11} q 3 3 6 1 M ${x + 9} ${y + 11} q -3 3 -6 1" fill="none" stroke="${TRACO}" stroke-width="2.2" stroke-linecap="round"/>`;
+        break;
       case 'aquilino':
-        return `<path d="M ${x - 3} ${y - 20} C ${x + 6} ${y - 10}, ${x + 14} ${y + 4}, ${x + 6} ${y + 10} C ${x + 2} ${y + 13}, ${x - 6} ${y + 12}, ${x - 9} ${y + 8}" fill="${sombra}" ${contorno(2.5)}/>` +
-          `<path d="M ${x - 4} ${y + 8} q 3 2 6 0" fill="none" stroke="${TRACO}" stroke-width="2"/>`;
+        s += `<path d="M ${x - 3} ${y - 22} C ${x + 7} ${y - 12}, ${x + 16} ${y + 4}, ${x + 7} ${y + 11} C ${x + 2} ${y + 14}, ${x - 7} ${y + 13}, ${x - 10} ${y + 8} C ${x - 8} ${y + 2}, ${x - 4} ${y - 8}, ${x - 3} ${y - 22} Z" fill="url(#na${g.id})" ${contorno(2.5)}/>` +
+          `<path d="M ${x + 1} ${y - 14} q 5 8 6 16" fill="none" stroke="#fff" stroke-width="2.5" opacity=".4" stroke-linecap="round"/>` +
+          `<path d="M ${x - 4} ${y + 9} q 3 2 7 0" fill="none" stroke="${TRACO}" stroke-width="2" stroke-linecap="round"/>`;
+        break;
       case 'fino':
-        return `<path d="M ${x - 1} ${y - 14} Q ${x + 4} ${y + 2} ${x + 6} ${y + 6} Q ${x} ${y + 10} ${x - 6} ${y + 6}" fill="none" ${contorno(2.5)}/>`;
+        s += `<path d="M ${x - 1} ${y - 15} Q ${x + 5} ${y + 2} ${x + 7} ${y + 7} Q ${x} ${y + 11} ${x - 7} ${y + 7}" fill="url(#na${g.id})" ${contorno(2.4)}/>` +
+          `<circle cx="${x + 2}" cy="${y + 3}" r="2" fill="#fff" opacity=".45"/>`;
+        break;
       default:
-        return `<circle cx="${x}" cy="${y + 2}" r="9" fill="${sombra}" ${contorno(2.5)}/>` +
-          `<ellipse cx="${x - 3}" cy="${y - 1}" rx="3.5" ry="2.5" fill="#fff" opacity=".5"/>`;
+        s += `<circle cx="${x}" cy="${y + 3}" r="10" fill="url(#na${g.id})" ${contorno(2.5)}/>` +
+          `<ellipse cx="${x - 3.5}" cy="${y - 0.5}" rx="4" ry="3" fill="#fff" opacity=".5"/>` +
+          `<path d="M ${x - 6} ${y + 9} q 2 2 4 1 M ${x + 6} ${y + 9} q -2 2 -4 1" fill="none" stroke="${TRACO}" stroke-width="1.8" stroke-linecap="round"/>`;
     }
+    return s;
   }
 
   function boca(f, g, exp) {
     const x = g.cx;
-    const y = g.cy + 35;
-    const labio = f.extras.includes('batom') ? '#c0392b' : TRACO;
+    const y = g.cy + 36;
+    const batom = f.extras.includes('batom');
+    const labio = batom ? '#c0392b' : misturar(f.pele, '#a8442f', 0.45);
     const ouro = f.extras.includes('dente-ouro');
     const dentuco = f.extras.includes('dentuco');
+    const dobra = escuro(f.pele, 0.3);
+    let s = '';
+    // Bigode-chinês (marcas de expressão) e covinha do queixo
+    const forte = exp === 'feliz' || exp === 'grito';
+    s += `<path d="M ${x - 15} ${y - 18} Q ${x - (forte ? 24 : 21)} ${y - 6} ${x - (forte ? 21 : 18)} ${y + 4}" fill="none" stroke="${dobra}" stroke-width="2" stroke-linecap="round" opacity="${forte ? 0.85 : 0.55}"/>`;
+    s += `<path d="M ${x + 15} ${y - 18} Q ${x + (forte ? 24 : 21)} ${y - 6} ${x + (forte ? 21 : 18)} ${y + 4}" fill="none" stroke="${dobra}" stroke-width="2" stroke-linecap="round" opacity="${forte ? 0.85 : 0.55}"/>`;
     switch (exp) {
       case 'feliz':
-        return `<path d="M ${x - 17} ${y - 4} Q ${x} ${y - 1} ${x + 17} ${y - 4} Q ${x + 14} ${y + 16} ${x} ${y + 16} Q ${x - 14} ${y + 16} ${x - 17} ${y - 4} Z" fill="#7a1f12" stroke="${labio}" stroke-width="3" stroke-linejoin="round"/>` +
-          `<path d="M ${x - 14} ${y - 2} Q ${x} ${y + 1} ${x + 14} ${y - 2} L ${x + 12} ${y + 4} Q ${x} ${y + 6} ${x - 12} ${y + 4} Z" fill="#fff"/>` +
-          (ouro ? `<rect x="${x + 2}" y="${y - 1}" width="6" height="5" fill="#f1c40f"/>` : '') +
-          `<ellipse cx="${x}" cy="${y + 12}" rx="7" ry="3.5" fill="#e0675a"/>`;
+        s += `<path d="M ${x - 18} ${y - 4} Q ${x} ${y} ${x + 18} ${y - 4} Q ${x + 15} ${y + 18} ${x} ${y + 18} Q ${x - 15} ${y + 18} ${x - 18} ${y - 4} Z" fill="#5c140b" stroke="${TRACO}" stroke-width="3" stroke-linejoin="round"/>` +
+          `<path d="M ${x - 15} ${y - 2} Q ${x} ${y + 2} ${x + 15} ${y - 2} L ${x + 13} ${y + 4} Q ${x} ${y + 7} ${x - 13} ${y + 4} Z" fill="#fffaf0"/>` +
+          `<path d="M ${x - 5} ${y} v 5 M ${x + 5} ${y} v 5" stroke="#d8cfc0" stroke-width="1.2"/>` +
+          (ouro ? `<rect x="${x + 2}" y="${y - 0.5}" width="6" height="5.5" fill="#f1c40f"/>` : '') +
+          `<ellipse cx="${x + 1}" cy="${y + 13}" rx="8" ry="4" fill="#e0675a"/>` +
+          `<path d="M ${x - 18} ${y - 4} q -3 -1 -4 -4 M ${x + 18} ${y - 4} q 3 -1 4 -4" fill="none" stroke="${TRACO}" stroke-width="2.2" stroke-linecap="round"/>`;
+        break;
       case 'bravo':
-        return `<path d="M ${x - 14} ${y + 6} Q ${x} ${y - 4} ${x + 14} ${y + 6} L ${x + 12} ${y + 10} Q ${x} ${y + 2} ${x - 12} ${y + 10} Z" fill="#fff" stroke="${labio}" stroke-width="3" stroke-linejoin="round"/>` +
-          `<path d="M ${x - 6} ${y + 2} v 6 M ${x} ${y} v 6 M ${x + 6} ${y + 2} v 6" stroke="${TRACO}" stroke-width="1.5"/>`;
+        s += `<path d="M ${x - 15} ${y + 7} Q ${x} ${y - 5} ${x + 15} ${y + 7} L ${x + 13} ${y + 11} Q ${x} ${y + 2} ${x - 13} ${y + 11} Z" fill="#fffaf0" stroke="${TRACO}" stroke-width="3" stroke-linejoin="round"/>` +
+          `<path d="M ${x - 7} ${y + 2} v 6 M ${x} ${y} v 6 M ${x + 7} ${y + 2} v 6" stroke="${TRACO}" stroke-width="1.4"/>` +
+          `<path d="M ${x - 10} ${y + 15} Q ${x} ${y + 11} ${x + 10} ${y + 15}" fill="none" stroke="${labio}" stroke-width="3" stroke-linecap="round"/>`;
+        break;
       case 'grito':
-        return `<ellipse cx="${x}" cy="${y + 6}" rx="13" ry="15" fill="#5a120a" stroke="${labio}" stroke-width="3"/>` +
-          `<path d="M ${x - 9} ${y - 4} Q ${x} ${y - 7} ${x + 9} ${y - 4} L ${x + 8} ${y} Q ${x} ${y - 2} ${x - 8} ${y} Z" fill="#fff"/>` +
-          `<ellipse cx="${x}" cy="${y + 15}" rx="7" ry="4" fill="#e0675a"/>`;
+        s += `<path d="M ${x - 14} ${y - 2} Q ${x} ${y - 9} ${x + 14} ${y - 2} Q ${x + 16} ${y + 16} ${x} ${y + 24} Q ${x - 16} ${y + 16} ${x - 14} ${y - 2} Z" fill="#4a0f08" stroke="${TRACO}" stroke-width="3" stroke-linejoin="round"/>` +
+          `<path d="M ${x - 10} ${y - 3} Q ${x} ${y - 7} ${x + 10} ${y - 3} L ${x + 9} ${y + 1} Q ${x} ${y - 2} ${x - 9} ${y + 1} Z" fill="#fffaf0"/>` +
+          `<path d="M ${x - 8} ${y + 18} Q ${x} ${y + 10} ${x + 8} ${y + 18} Q ${x} ${y + 23} ${x - 8} ${y + 18} Z" fill="#e0675a"/>` +
+          `<path d="M ${x - 14} ${y - 2} Q ${x} ${y - 9} ${x + 14} ${y - 2}" fill="none" stroke="${labio}" stroke-width="2.5" opacity=".7"/>`;
+        break;
       default:
-        return `<path d="M ${x - 14} ${y} Q ${x} ${y + 10} ${x + 14} ${y - 2}" fill="none" stroke="${labio}" stroke-width="3.5" stroke-linecap="round"/>` +
-          (dentuco ? `<path d="M ${x - 6} ${y + 4} h 12 v 7 h -12 Z M ${x} ${y + 4} v 7" fill="#fff" ${contorno(2)}/>` : '') +
-          (ouro ? `<rect x="${x + 4}" y="${y + 1}" width="5" height="5" fill="#f1c40f" ${contorno(1.2)}/>` : '') +
-          `<path d="M ${x + 14} ${y - 2} q 3 -1 4 -4" fill="none" stroke="${TRACO}" stroke-width="2"/>`;
+        // Lábio superior em traço e lábio inferior com volume
+        s += `<path d="M ${x - 15} ${y} Q ${x - 6} ${y + 4} ${x} ${y + 3} Q ${x + 6} ${y + 4} ${x + 15} ${y - 2}" fill="none" stroke="${TRACO}" stroke-width="3.2" stroke-linecap="round"/>` +
+          `<path d="M ${x - 10} ${y + 5} Q ${x} ${y + 13} ${x + 10} ${y + 4} Q ${x} ${y + 7} ${x - 10} ${y + 5} Z" fill="${labio}" opacity="${batom ? 1 : 0.75}"/>` +
+          `<path d="M ${x - 3} ${y + 7.5} q 3 1.5 6 0" fill="none" stroke="#fff" stroke-width="1.4" opacity=".55" stroke-linecap="round"/>` +
+          (dentuco ? `<path d="M ${x - 6} ${y + 3} h 12 v 8 h -12 Z M ${x} ${y + 3} v 8" fill="#fffaf0" ${contorno(2)}/>` : '') +
+          (ouro ? `<rect x="${x + 4}" y="${y + 0.5}" width="5" height="5" fill="#f1c40f" ${contorno(1.2)}/>` : '') +
+          `<path d="M ${x + 15} ${y - 2} q 3 -1 4 -4" fill="none" stroke="${TRACO}" stroke-width="2" stroke-linecap="round"/>`;
     }
+    s += `<path d="M ${x - 5} ${y + 24} Q ${x} ${y + 27} ${x + 5} ${y + 24}" fill="none" stroke="${dobra}" stroke-width="1.6" stroke-linecap="round" opacity=".6"/>`;
+    return s;
   }
 
   function barba(f, g) {
@@ -563,43 +635,107 @@ window.Personagens = (function () {
    * @param {string} id id do personagem (TrucoElenco)
    * @param {string} [exp] neutro | feliz | bravo | grito
    */
+  // Mechas e brilho do cabelo, recortados pela forma do próprio cabelo
+  function mechas(desenho, cor, g, sufixo) {
+    const m = /\sd="([^"]+)"/.exec(desenho);
+    if (!m) return '';
+    const id = 'mc' + g.id + sufixo;
+    let s = `<clipPath id="${id}"><path d="${m[1]}"/></clipPath><g clip-path="url(#${id})">`;
+    s += `<path d="${m[1]}" fill="url(#cb${g.id})" opacity=".55"/>`;
+    for (let k = -6; k <= 6; k++) {
+      const x = g.cx + k * 9;
+      s += `<path d="M ${x} ${g.cy - 4} Q ${x + k * 2 + 4} ${g.cy - g.ry * 0.6} ${x + k * 4 + 2} ${g.cy - g.ry - 34}" fill="none" stroke="${escuro(cor, 0.3)}" stroke-width="1.6" opacity=".6"/>`;
+    }
+    s += `<path d="M ${g.cx - g.rx * 0.7} ${g.cy - g.ry * 0.62} Q ${g.cx - g.rx * 0.2} ${g.cy - g.ry - 6} ${g.cx + g.rx * 0.35} ${g.cy - g.ry * 0.82}" fill="none" stroke="${claro(cor, 0.45)}" stroke-width="4" stroke-linecap="round" opacity=".45"/>`;
+    return s + '</g>';
+  }
+
+  // Sombreado e dobras da roupa
+  function acabamentoRoupa(g) {
+    const torso = 'M 8 204 C 12 170, 52 156, 100 156 C 148 156, 188 170, 192 204 Z';
+    const id = 'rp' + g.id;
+    return `<clipPath id="${id}"><path d="${torso}"/></clipPath><g clip-path="url(#${id})">` +
+      `<rect x="0" y="150" width="200" height="60" fill="url(#ro${g.id})"/>` +
+      `<path d="M 46 204 Q 52 186 46 172 M 154 204 Q 148 186 154 172 M 72 204 Q 76 194 70 186 M 128 204 Q 124 194 130 186" fill="none" stroke="${TRACO}" stroke-width="1.8" opacity=".35" stroke-linecap="round"/>` +
+      `<ellipse cx="100" cy="160" rx="34" ry="9" fill="#000" opacity=".22"/></g>`;
+  }
+
+  /**
+   * Gera o SVG de um personagem
+   * @param {string} id id do personagem (TrucoElenco)
+   * @param {string} [exp] neutro | feliz | bravo | grito
+   */
   function svg(id, exp) {
     const f = FICHAS[id] || FICHAS.ze;
     f.extras = f.extras || [];
     exp = exp || 'neutro';
-    const g = { id: (++seq).toString(36), cx: 100, cy: 98, rx: f.cabeca.rx, ry: f.cabeca.ry };
-    const cab = caminhoCabeca(g.cx, g.cy, g.rx, g.ry, f.cabeca.queixo);
-    const clip = 'cc' + g.id;
+    const g = { id: (++seq).toString(36), cx: 100, cy: 96, rx: f.cabeca.rx, ry: f.cabeca.ry };
+    const cab = caminhoCabeca(g.cx, g.cy, g.rx, g.ry, f.cabeca);
+    const u = g.id;
+    const pele = f.pele;
+    const sombraPele = escuro(pele, 0.2);
     let s = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="personagem exp-${exp}" aria-hidden="true">`;
-    s += `<defs><radialGradient id="fd${g.id}" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="${claro(f.fundo, 0.35)}"/><stop offset="1" stop-color="${escuro(f.fundo, 0.15)}"/></radialGradient>` +
-      `<clipPath id="${clip}"><path d="${cab}"/></clipPath></defs>`;
-    s += `<rect width="200" height="200" fill="url(#fd${g.id})"/>`;
-    s += `<circle cx="100" cy="98" r="86" fill="#fff" opacity=".12"/>`;
-    s += '<g transform="translate(9 16) scale(.91)">';
+    s += '<defs>' +
+      `<radialGradient id="fd${u}" cx="50%" cy="34%" r="75%"><stop offset="0" stop-color="${claro(f.fundo, 0.45)}"/><stop offset=".6" stop-color="${f.fundo}"/><stop offset="1" stop-color="${escuro(f.fundo, 0.3)}"/></radialGradient>` +
+      `<radialGradient id="vh${u}" cx="50%" cy="45%" r="62%"><stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".42"/></radialGradient>` +
+      `<radialGradient id="ir${u}" cx="45%" cy="65%" r="60%"><stop offset="0" stop-color="${claro(f.olhos, 0.55)}"/><stop offset=".55" stop-color="${f.olhos}"/><stop offset="1" stop-color="${escuro(f.olhos, 0.4)}"/></radialGradient>` +
+      `<linearGradient id="ob${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dcd2c6"/><stop offset=".45" stop-color="#fffdf8"/></linearGradient>` +
+      `<linearGradient id="na${u}" x1="0" y1="0" x2="1" y2=".3"><stop offset="0" stop-color="${claro(pele, 0.12)}"/><stop offset=".55" stop-color="${pele}"/><stop offset="1" stop-color="${sombraPele}"/></linearGradient>` +
+      `<linearGradient id="ro${u}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient>` +
+      `<linearGradient id="cb${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".25"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient>` +
+      `<filter id="tn${u}" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="${id.length * 7}"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>` +
+      `<filter id="gr${u}"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .2  0 0 0 0 .12  0 0 0 0 .05  0 0 0 .55 0"/></filter>` +
+      `<clipPath id="cc${u}"><path d="${cab}"/></clipPath>` +
+      '</defs>';
+    // Cenário: degradê, raios de sol e morro ao fundo
+    s += `<rect width="200" height="200" fill="url(#fd${u})"/>`;
+    let raios = '';
+    for (let k = 0; k < 14; k++) raios += `<path d="M 100 90 L ${n1(100 + Math.cos(k * Math.PI / 7) * 160)} ${n1(90 + Math.sin(k * Math.PI / 7) * 160)} L ${n1(100 + Math.cos(k * Math.PI / 7 + 0.12) * 160)} ${n1(90 + Math.sin(k * Math.PI / 7 + 0.12) * 160)} Z"/>`;
+    s += `<g fill="#fff" opacity=".09">${raios}</g>`;
+    s += `<path d="M 0 150 Q 40 128 84 146 Q 128 160 160 138 Q 184 124 200 132 L 200 200 L 0 200 Z" fill="${escuro(f.fundo, 0.25)}" opacity=".55"/>`;
+    s += `<g transform="translate(9 14) scale(.91)" filter="url(#tn${u})">`;
     s += cabeloAtras(f, g);
     s += corpo(f, g);
+    s += acabamentoRoupa(g);
     if (f.extras.includes('lenco-pescoco')) s += lencoPescoco(f.corLenco || '#c0392b');
+    // Sombra do queixo no pescoço
+    s += `<ellipse cx="${g.cx + 3}" cy="${g.cy + g.ry + 4}" rx="${g.rx * 0.45}" ry="9" fill="${escuro(pele, 0.4)}" opacity=".55"/>`;
     s += orelhas(f, g);
     if (f.extras.some(e => e === 'brinco' || e === 'argola')) s += brincos(f, g);
-    // Rosto com sombreamento lateral
-    // Sombra em meia-lua: rosto escuro por baixo e a mesma forma deslocada por cima
-    s += `<path d="${cab}" fill="${escuro(f.pele, 0.16)}"/>`;
-    s += `<g clip-path="url(#${clip})"><path d="${cab}" fill="${f.pele}" transform="translate(-9 -5)"/>` +
-      `<ellipse cx="${g.cx - g.rx * 0.38}" cy="${g.cy - g.ry * 0.42}" rx="${g.rx * 0.32}" ry="${g.ry * 0.22}" fill="#fff" opacity=".2"/></g>`;
-    s += `<path d="${cab}" fill="none" ${contorno()}/>`;
+    // Rosto em três tons: sombra, luz e brilho
+    s += `<path d="${cab}" fill="${sombraPele}"/>`;
+    s += `<g clip-path="url(#cc${u})">` +
+      `<path d="${cab}" fill="${pele}" transform="translate(-8 -6)"/>` +
+      `<ellipse cx="${g.cx - g.rx * 0.36}" cy="${g.cy - g.ry * 0.48}" rx="${g.rx * 0.36}" ry="${g.ry * 0.2}" fill="#fff" opacity=".2"/>` +
+      `<ellipse cx="${g.cx - g.rx * 0.55}" cy="${g.cy + 8}" rx="${g.rx * 0.16}" ry="${g.ry * 0.1}" fill="#fff" opacity=".14"/>` +
+      ((f.chapeu || ['curto', 'topete', 'grisalho', 'coque', 'trancas', 'cacheado', 'volume'].includes(f.cabeloTipo))
+        ? `<ellipse cx="${g.cx + 6}" cy="${g.cy - g.ry * 0.62}" rx="${g.rx * 1.2}" ry="${f.chapeu ? 20 : 13}" fill="${escuro(pele, 0.4)}" opacity=".45"/>` : '') +
+      `</g>`;
+    if (f.cabeca.papada) s += `<path d="M ${g.cx - g.rx * 0.5} ${g.cy + g.ry * 0.9} Q ${g.cx} ${g.cy + g.ry * 1.22} ${g.cx + g.rx * 0.5} ${g.cy + g.ry * 0.9}" fill="none" stroke="${escuro(pele, 0.35)}" stroke-width="2.2" stroke-linecap="round"/>`;
+    s += `<path d="${cab}" fill="none" ${contorno(3.4)}/>`;
     if (f.extras.includes('costeleta')) s += costeletas(f, g);
     s += extrasRosto(f, g, exp);
-    s += barba(f, g);
+    const bar = barba(f, g);
+    s += bar + (bar && f.barba !== 'rala' ? mechas(bar, f.barba === 'branca' ? '#efefef' : f.cabelo, g, 'b') : '');
     s += boca(f, g, exp);
-    s += bigode(f, g);
+    const big = bigode(f, g);
+    s += big + (big && f.bigode !== 'fino' ? mechas(big, f.bigodeCor || f.cabelo, g, 'm') : '');
     s += nariz(f, g);
     s += olhos(f, g, exp);
     s += sobrancelhas(f, g, exp);
-    s += cabeloFrente(f, g);
+    const cab2 = cabeloFrente(f, g);
+    s += cab2 + (cab2 && !['careca', 'raspado'].includes(f.cabeloTipo) ? mechas(cab2, f.cabelo, g, 'c') : '');
     if (f.oculos) s += oculos(f, g);
-    if (f.chapeu) s += chapeu(f, g);
+    if (f.chapeu) {
+      const ch = chapeu(f, g);
+      s += ch + mechas(ch, f.chapeu.cor, g, 'h').replace(/stroke="[^"]+" stroke-width="1.6" opacity=".6"/g, 'stroke="#000" stroke-width="1" opacity=".08"');
+    }
     s += extrasFinais(f, g, exp);
-    s += '</g></svg>';
+    s += '</g>';
+    // Vinheta e textura de papel
+    s += `<rect width="200" height="200" fill="url(#vh${u})"/>`;
+    s += `<rect width="200" height="200" filter="url(#gr${u})" opacity=".28"/>`;
+    s += '</svg>';
     return s;
   }
 

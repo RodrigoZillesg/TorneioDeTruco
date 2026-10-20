@@ -21,6 +21,9 @@ const io = new Server(server, {
   }
 });
 
+// Jogo de Truco online (salas em tempo real no namespace /truco)
+require('./jogo/servidor/salas')(io);
+
 // Porta do servidor (EasyPanel geralmente usa variável de ambiente PORT)
 const PORT = process.env.PORT || 3000;
 

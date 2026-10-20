@@ -4,12 +4,18 @@
  */
 
 window.AppVersion = {
-  VERSION: '2.1.2',
-  BUILD_DATE: '2025-01-31',
-  LAST_UPDATE: '16:45',
+  VERSION: '2.5.0',
+  BUILD_DATE: '2026-10-20',
+  LAST_UPDATE: '03:30',
   
   // Changelog resumido
   CHANGES: {
+    '2.5.0': 'Novo visual dos personagens: estilo flat moderno, com as quatro expressões',
+    '2.4.1': 'Melhoria: personagens com acabamento de ilustração (traço de nanquim, sombras, textura e cenário)',
+    '2.4.0': 'Novo: personagens caricatos ilustrados (com expressões) e foto própria no lugar dos emojis',
+    '2.3.1': 'Correção: cartas sem naipes sobrepostos e anúncio de truco legível',
+    '2.3.0': 'Novo: Truco online hospedado no WordPress (plugin com relay, sem servidor Node)',
+    '2.2.0': 'Novo: Jogo de Truco Paulista em /jogo (contra a IA ou online com amigos, com efeitos visuais e sonoros)',
     '2.1.2': 'Correção: BracketSystem não carregado - ajustado nome da exportação',
     '2.1.1': 'Correções: Layout mobile, geração de bracket e remoção de texto de desenvolvimento',
     '2.1.0': 'Novo sistema: Cadastro de participantes individuais e formação de duplas',
